@@ -6,43 +6,67 @@
 #include <esp_system.h>
 #include <esp_rom_crc.h>
 #include <driver/rtc_io.h>
+#include <soc/efuse_reg.h>
 #include <mbedtls/sha256.h>
 #include <time.h>
 
 // ---------------- Parâmetros configuráveis (Tabela 8) ----------------
-constexpr uint32_t T_INAT    = 15000;  // ms, timeout de inatividade
-constexpr uint32_t T_DESC    = 60000;  // ms, tempo sem interação até deep sleep
+constexpr uint32_t T_INAT    = 15000;  // ms, sem tecla: descarta a entrada e entra em deep sleep (RF-02/RF-12)
 constexpr uint32_t T_ACIO    = 5000;   // ms, solenoide energizado (destravado)
 constexpr uint32_t T_DEB     = 50;     // ms, debounce
 constexpr uint32_t T_STEALTH = 3000;   // ms, segurar * + # para alternar stealth
-constexpr uint32_t W_ADM     = 60000;  // ms, janela para troca de senha após autenticar
 constexpr uint32_t T_LOCK    = 60;     // s, lockout base
 constexpr uint32_t T_MAX     = 30 * 60;// s, teto do lockout
 constexpr uint32_t W_REC     = 15 * 60;// s, janela de recorrência de lockouts
 constexpr uint8_t  N_TENT    = 5;      // tentativas antes do lockout
 constexpr bool     DESAFIO_CONTA_FALHA = false;  // erro no desafio conta como tentativa?
 constexpr bool     TEM_SENSOR_PORTA    = false;  // reed switch não comprado; ligue quando instalar
+constexpr bool     TEM_DISPLAY         = false;  // módulo TM1637 de 6 dígitos ainda não chegou; true ao ligar
+constexpr uint8_t  BRILHO_DISPLAY      = 4;      // 0..7
+constexpr bool     DEBUG_TECLADO       = false;  // imprime cada tecla lida (revela a senha: só p/ diagnóstico)
+constexpr bool     TECLADO_INVERTIDO   = true;   // fios na ordem 8..1 (D32 = fio 8); false = ordem do guia
 // Bateria: 12 V (exigida pelo solenoide). Divisor R1 = 330k (topo), R2 = 100k (base).
 constexpr float    V_LOW   = 10.5f;
 constexpr float    BAT_DIV = (330.0f + 100.0f) / 100.0f;  // calibre com multímetro
 
 // ---------------- Pinos ----------------
-// Teclado 4x4 (fios 1..8 da esquerda p/ direita = L1..L4, C1..C4).
-// Todos RTC GPIO: linhas ficam em HIGH e colunas acordam o chip (ext1 ANY_HIGH).
-const uint8_t LINHAS[4]  = {27, 14, 13, 4};
-const uint8_t COLUNAS[4] = {32, 33, 25, 26};
-const char TECLAS[4][4] = {{'1', '2', '3', 'A'},
+// Teclado 4x4: fios 1..8 (da esquerda p/ direita, vendo de frente) em sequência nos pinos
+// D32, D33, D25, D26, D27, D14, D12, D13 — sem resistores externos. Fios 1-4 são as linhas
+// físicas do teclado e 5-8 as colunas; o firmware LÊ as linhas (pinos RTC com pull-down
+// interno, acordam o chip via ext1 ANY_HIGH) e ENERGIZA as colunas.
+// D12 é strapping (HIGH no reset = flash em 1,8 V, não boota). Com o eFuse que fixa a flash em
+// 3,3 V gravado (espefuse.py set_flash_voltage 3.3V), ele vira pino comum e fica em HIGH no sono
+// como os outros: todas as teclas acordam. Sem o eFuse, fica em LOW e as teclas ligadas a ele
+// não acordam (3 6 9 # na ordem do guia, ou 4 5 6 B com TECLADO_INVERTIDO).
+const uint8_t LINHAS[4]  = {27, 14, 12, 13};  // energizadas (fios 5..8, ou 4..1 se invertido)
+const uint8_t COLUNAS[4] = {32, 33, 25, 26};  // lidas, acordam o chip (fios 1..4, ou 8..5 se invertido)
+constexpr uint8_t PIN_STRAP = 12;
+bool d12Livre() {  // eFuses XPD_SDIO_FORCE e XPD_SDIO_TIEH: flash fixa em 3,3 V, D12 ignorado no boot
+  uint32_t r = REG_READ(EFUSE_BLK0_RDATA4_REG);
+  return (r & EFUSE_RD_SDIO_FORCE) && (r & EFUSE_RD_SDIO_TIEH);
+}
+const char LAYOUT[4][4] = {{'1', '2', '3', 'A'},  // como as teclas aparecem no teclado
                            {'4', '5', '6', 'B'},
                            {'7', '8', '9', 'C'},
                            {'*', '0', '#', 'D'}};
+char tecla(int energizada, int lida) {
+  return TECLADO_INVERTIDO ? LAYOUT[3 - energizada][3 - lida] : LAYOUT[lida][energizada];
+}
 constexpr char K_LIMPAR = '*', K_CONFIRMAR = '#', K_ADMIN = 'A';
-constexpr uint16_t COMBO_STEALTH = (1 << 12) | (1 << 14);  // * e #
+constexpr uint16_t COMBO_STEALTH = TECLADO_INVERTIDO ? (1 << 3) | (1 << 1)    // * e # (bit = energizada*4 + lida)
+                                                     : (1 << 3) | (1 << 11);
 
 constexpr uint8_t PIN_TRANCA = 16;  // gate do MOSFET do solenoide (pull-down 10k no gate!)
 constexpr uint8_t PIN_BUZZER = 17;  // base do NPN do buzzer ativo 5 V
-constexpr uint8_t PIN_LED    = 2;   // LED azul da placa (indicador visual / desafio)
-constexpr uint8_t PIN_PORTA  = 34;  // reed switch, LOW = fechada (pull-up externo)
+constexpr uint8_t PIN_LED    = 2;   // LED azul da placa (status: pisca junto com os bipes)
+constexpr uint8_t PIN_PORTA  = 39;  // VN: reed switch, LOW = fechada (pull-up externo)
 constexpr uint8_t PIN_BAT    = 36;  // ADC1_CH0 (VP)
+// Módulo de 6 dígitos TM1637 alimentado em 3V3 (os pull-ups do módulo vão ao VCC dele;
+// em 5 V eles jogariam 5 V nos GPIOs). Sem TEM_DISPLAY o desafio sai em piscadas/bipes.
+constexpr uint8_t PIN_DIO = 18;
+constexpr uint8_t PIN_CLK = 19;
+const uint8_t POS_TM[6] = {2, 1, 0, 5, 4, 3};  // dígito da esquerda -> posição no TM1637 (padrão RobotDyn);
+                                               // se os dígitos saírem embaralhados, ajuste aqui
 
 // RF-04: T = min(T_MAX, T_LOCK * 2^k)
 constexpr uint32_t lockoutS(uint8_t k) { return (T_LOCK << k) < T_MAX ? (T_LOCK << k) : T_MAX; }
@@ -69,10 +93,12 @@ void salvaCfg() {
   const char *k = ativaB ? "cfg_a" : "cfg_b";  // grava sempre na cópia inativa
   cfg.seq++;
   cfg.crc = crcDe(cfg);
-  nvs.putBytes(k, &cfg, sizeof cfg);
-  Cfg lida;
-  if (leCopia(k, lida) && !memcmp(&lida, &cfg, sizeof cfg)) ativaB = !ativaB;
-  else Serial.println("[NVS] falha na verificacao da escrita");
+  for (int tentativa = 1; tentativa <= 3; tentativa++) {  // flash pode corromper uma gravação: repete
+    nvs.putBytes(k, &cfg, sizeof cfg);
+    Cfg lida;
+    if (leCopia(k, lida) && !memcmp(&lida, &cfg, sizeof cfg)) { ativaB = !ativaB; return; }
+    Serial.printf("[NVS] falha na verificacao da escrita (tentativa %d/3)\n", tentativa);
+  }
 }
 
 void hashSenha(const char *s, uint8_t out[32]) { mbedtls_sha256_ret((const uint8_t *)s, 6, out, 0); }
@@ -140,6 +166,44 @@ void tickPadrao() {
 }
 void esperaPadrao() { while (padIdx < padLen && !padLoop) { tickPadrao(); delay(1); } }
 
+// ---------------- Display TM1637 (RF-07: mostra o desafio e a senha) ----------------
+uint8_t tela[6];                                                  // segmentos, da esquerda p/ direita
+uint8_t enviada[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};        // último conteúdo enviado ao módulo
+
+void tmNivel(uint8_t pino, bool alto) {  // dreno aberto: alto = solta o pino (pull-up do módulo)
+  if (alto) pinMode(pino, INPUT);
+  else { pinMode(pino, OUTPUT); digitalWrite(pino, LOW); }
+  delayMicroseconds(5);
+}
+void tmInicio() { tmNivel(PIN_DIO, false); }  // DIO desce com CLK alto
+void tmFim() { tmNivel(PIN_CLK, false); tmNivel(PIN_DIO, false); tmNivel(PIN_CLK, true); tmNivel(PIN_DIO, true); }
+void tmByte(uint8_t b) {  // LSB primeiro; o ACK do TM1637 é ignorado
+  for (int i = 0; i < 8; i++, b >>= 1) { tmNivel(PIN_CLK, false); tmNivel(PIN_DIO, b & 1); tmNivel(PIN_CLK, true); }
+  tmNivel(PIN_CLK, false); tmNivel(PIN_DIO, true); tmNivel(PIN_CLK, true); tmNivel(PIN_CLK, false);
+}
+void tmComando(uint8_t c) { tmInicio(); tmByte(c); tmFim(); }
+
+void enviaTela() {  // só fala com o módulo quando o conteúdo muda
+  if (!TEM_DISPLAY || !memcmp(tela, enviada, 6)) return;
+  memcpy(enviada, tela, 6);
+  uint8_t pos[6];
+  for (int i = 0; i < 6; i++) pos[POS_TM[i]] = tela[i];
+  tmComando(0x40);  // escrita com endereço automático
+  tmInicio(); tmByte(0xC0); for (uint8_t b : pos) tmByte(b); tmFim();
+  tmComando(0x88 | BRILHO_DISPLAY);  // display ligado
+}
+uint8_t seg7(char c) {  // bits: dp g f e d c b a
+  static const uint8_t num[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F};
+  if (c >= '0' && c <= '9') return num[c - '0'];
+  switch (c) {
+    case '-': return 0x40; case '_': return 0x08; case 'A': return 0x77; case 'b': return 0x7C;
+    case 'C': return 0x39; case 'E': return 0x79; case 'L': return 0x38; case 'n': return 0x54;
+    case 'O': return 0x3F; case 'P': return 0x73; case 't': return 0x78; default: return 0;
+  }
+}
+void preparaTela(const char *s) { for (int i = 0; i < 6; i++) tela[i] = seg7(s[i]); }
+void mostra(const char *s) { preparaTela(s); enviaTela(); }
+
 // ---------------- Teclado com debounce (RF-01) ----------------
 uint16_t varre() {
   uint16_t m = 0;
@@ -176,6 +240,11 @@ char leTecla() {
   if (m != bruto) { bruto = m; brutoT = agora; }
 
   if (agora - brutoT >= T_DEB && m != estavel) {
+    if (DEBUG_TECLADO && m) {
+      int i = __builtin_ctz(m);
+      Serial.printf("[tecla] mascara=0x%04X -> '%c' (energizada %d = GPIO%d, lida %d = GPIO%d)\n", m,
+                    tecla(i / 4, i % 4), i / 4, LINHAS[i / 4], i % 4, COLUNAS[i % 4]);
+    }
     uint16_t novas = m & ~estavel & ~COMBO_STEALTH, soltas = estavel & ~m & COMBO_STEALTH;
     estavel = m;
     if (estavel == COMBO_STEALTH) { comboT = agora; comboFeito = false; ignoraSoltura = true; }
@@ -183,7 +252,7 @@ char leTecla() {
     if (!estavel) ignoraSoltura = false;
     if (uint16_t b = novas ? novas : soltas) {
       int i = __builtin_ctz(b);
-      return TECLAS[i / 4][i % 4];
+      return tecla(i / 4, i % 4);
     }
   }
   if (estavel == COMBO_STEALTH && !comboFeito && agora - comboT >= T_STEALTH) {
@@ -194,13 +263,13 @@ char leTecla() {
 }
 
 // ---------------- Máquina de estados (Cap. 6) ----------------
-enum Estado { S1_ENTROPIA, S2_DESAFIO, S3_SENHA, S4_VALIDACAO, S5_ACESSO, S6_BLOQUEIO, S7_TRANCA, S8_TROCA };
+enum Estado { S0_DESCANSO, S1_ENTROPIA, S2_DESAFIO, S3_SENHA, S4_VALIDACAO, S5_ACESSO, S6_BLOQUEIO, S7_TRANCA, S8_TROCA };
 Estado st;
 char buf[6];
 uint8_t len, d1, d2, passoTroca;
 uint8_t novaHash[32];
-uint32_t tEstado, tAtividade, tAuth;
-bool autenticado, portaAbriu;
+uint32_t tEstado, tAtividade;
+bool portaAbriu;
 
 void entra(Estado e);
 
@@ -219,14 +288,15 @@ void bloqueia() {  // RF-04
   entra(S6_BLOQUEIO);
 }
 
-void registraFalha() {  // cfg.falhas já incrementado e salvo por contaTentativa()
+void registraFalha(Estado volta) {  // cfg.falhas já incrementado e salvo por contaTentativa()
   Serial.printf("Falha %u/%u\n", cfg.falhas, N_TENT);
   PLAY(P_ERRO);
-  if (cfg.falhas < N_TENT) entra(S1_ENTROPIA);
+  if (cfg.falhas < N_TENT) entra(volta);
   else bloqueia();
 }
 
-void mostraDesafio() {  // d piscadas por dígito (0 = uma piscada longa), pausa, repete
+// Conteúdo dos displays derivado do estado (chamado a cada volta do loop).
+void mostraDesafio() {  // sem display: d piscadas/bipes por dígito (0 = uma longa), pausa, repete
   uint16_t p[48];
   uint8_t n = 0;
   for (uint8_t d : {d1, d2}) {
@@ -238,18 +308,32 @@ void mostraDesafio() {  // d piscadas por dígito (0 = uma piscada longa), pausa
   toca(p, n, true, true);
 }
 
+void atualizaTela() {
+  char t[7] = "      ";
+  if (st == S2_DESAFIO) { t[2] = '0' + d1; t[3] = '0' + d2; }
+  else if (st == S3_SENHA || st == S8_TROCA)  // dígitos reais; vazio = "_" (senha) ou "-" (troca)
+    for (int i = 0; i < 6; i++) t[i] = i < len ? buf[i] : (st == S3_SENHA ? '_' : '-');
+  else if (st == S5_ACESSO) memcpy(t, " OPEn ", 6);
+  preparaTela(t);
+  if (st == S2_DESAFIO) for (int i = 0; i < len; i++) tela[2 + i] |= 0x80;  // ponto = dígito do desafio aceito
+  enviaTela();
+}
+
 void entra(Estado e) {
   esperaPadrao();  // deixa o bipe anterior terminar
   st = e;
   tEstado = millis();
   len = 0;
   switch (e) {
+    case S0_DESCANSO:
+      dorme();  // não retorna
+      break;
     case S1_ENTROPIA:
       // ponytail: esp_random sem Wi-Fi/BT é pseudoaleatório; basta para espalhar marcas.
       d1 = esp_random() % 10;
       d2 = esp_random() % 10;
       Serial.printf("S1/S2: desafio anti-marcas = %u %u\n", d1, d2);
-      mostraDesafio();
+      if (!TEM_DISPLAY) mostraDesafio();
       st = S2_DESAFIO;
       break;
     case S3_SENHA:
@@ -261,10 +345,13 @@ void entra(Estado e) {
       Serial.println("S5: acesso concedido");
       digitalWrite(PIN_TRANCA, HIGH);
       PLAY(P_SUCESSO);
-      autenticado = true;
-      tAuth = tAtividade = millis();
+      tAtividade = millis();
       portaAbriu = false;
-      if (cfg.falhas) { cfg.falhas = 0; salvaCfg(); }
+      if (cfg.falhas || cfg.lockouts || cfg.lastLockTs || cfg.bloqueado) {  // acerto zera todas as punições
+        cfg.falhas = cfg.lockouts = cfg.bloqueado = 0;
+        cfg.lastLockTs = 0;
+        salvaCfg();
+      }
       break;
     case S6_BLOQUEIO: {  // teclas ignoradas: dorme só com o timer até o fim do lockout
       uint32_t agora = time(nullptr), dur = lockoutS(cfg.lockouts - 1);
@@ -276,6 +363,7 @@ void entra(Estado e) {
       }
       if (cfg.lastLockTs - agora > dur) { cfg.lastLockTs = agora + dur; salvaCfg(); }  // relógio zerou: recomeça
       Serial.printf("S6: bloqueado por %u s\n", (unsigned)(cfg.lastLockTs - agora));
+      mostra(" bLOC ");
       PLAY(P_BLOQUEIO);
       esperaPadrao();
       dorme(cfg.lastLockTs - agora);
@@ -285,7 +373,7 @@ void entra(Estado e) {
       digitalWrite(PIN_TRANCA, LOW);  // solenoide NF: sem energia = travado
       Serial.println("S7: trancado");
       delay(100);  // assentamento mecânico da lingueta
-      entra(S1_ENTROPIA);
+      entra(S0_DESCANSO);
       break;
     case S8_TROCA:
       passoTroca = 0;
@@ -301,8 +389,8 @@ void valida() {  // S4
   hashSenha(buf, h);
   memset(buf, 0, sizeof buf);
   contaTentativa();
-  if (hashIgual(h, cfg.hash)) entra(S5_ACESSO);  // S5 zera cfg.falhas
-  else registraFalha();
+  if (hashIgual(h, cfg.hash)) entra(S5_ACESSO);  // S5 zera falhas e o histórico de bloqueios
+  else registraFalha(S3_SENHA);  // errou: digita a senha de novo, sem novo desafio
 }
 
 void passoTrocaSenha() {  // S8: atual -> nova -> repetição -> NVS
@@ -312,7 +400,7 @@ void passoTrocaSenha() {  // S8: atual -> nova -> repetição -> NVS
   len = 0;
   if (passoTroca == 0) {
     contaTentativa();
-    if (!hashIgual(h, cfg.hash)) { registraFalha(); return; }
+    if (!hashIgual(h, cfg.hash)) { registraFalha(S0_DESCANSO); return; }
     cfg.falhas = 0;
     salvaCfg();
     Serial.println("S8: digite a NOVA senha e #");
@@ -329,8 +417,7 @@ void passoTrocaSenha() {  // S8: atual -> nova -> repetição -> NVS
       Serial.println("S8: senhas nao conferem");
       PLAY(P_ERRO);
     }
-    autenticado = false;
-    entra(S1_ENTROPIA);
+    entra(S0_DESCANSO);
     return;
   }
   passoTroca++;
@@ -343,13 +430,18 @@ void dorme(uint32_t s) {  // s > 0: acorda só pelo timer, após s segundos (loc
   padLen = 0;
   saida(false);
   digitalWrite(PIN_TRANCA, LOW);
+  if (TEM_DISPLAY) tmComando(0x80);  // display desligado (o TM1637 guarda o estado no sleep)
   if (s) {
     esp_sleep_enable_timer_wakeup(s * 1000000ULL);
     Serial.flush();
     esp_deep_sleep_start();
   }
   uint64_t mascara = 0;
-  for (uint8_t p : LINHAS) { pinMode(p, OUTPUT); digitalWrite(p, HIGH); gpio_hold_en((gpio_num_t)p); }
+  for (uint8_t p : LINHAS) {  // em HIGH para acordar com tecla; o D12 só se o eFuse permitir
+    pinMode(p, OUTPUT);
+    digitalWrite(p, p != PIN_STRAP || d12Livre());
+    gpio_hold_en((gpio_num_t)p);
+  }
   for (uint8_t p : COLUNAS) {
     rtc_gpio_init((gpio_num_t)p);
     rtc_gpio_set_direction((gpio_num_t)p, RTC_GPIO_MODE_INPUT_ONLY);
@@ -368,6 +460,7 @@ void checaBateria() {  // RF-11
   float v = mv * BAT_DIV / 1000.0f;
   if (mv > 500 && v < V_LOW) {  // < 0,5 V no pino = divisor ausente (ex.: alimentado por USB)
     Serial.printf("Bateria baixa: %.2f V\n", v);
+    mostra(" bAt  ");
     PLAY(P_BATERIA);
     esperaPadrao();
   }
@@ -380,6 +473,7 @@ void setup() {
   pinMode(PIN_BUZZER, OUTPUT); digitalWrite(PIN_BUZZER, LOW);
   pinMode(PIN_LED, OUTPUT);    digitalWrite(PIN_LED, LOW);
   if (TEM_SENSOR_PORTA) pinMode(PIN_PORTA, INPUT);
+  if (TEM_DISPLAY) { tmNivel(PIN_CLK, true); tmNivel(PIN_DIO, true); }
   for (uint8_t p : LINHAS) { gpio_hold_dis((gpio_num_t)p); pinMode(p, INPUT); }
   for (uint8_t p : COLUNAS) { rtc_gpio_deinit((gpio_num_t)p); pinMode(p, INPUT_PULLDOWN); }
 
@@ -387,7 +481,8 @@ void setup() {
   bruto = estavel = varre();  // a tecla que acordou o chip não conta como dígito
   ignoraSoltura = estavel;    // nem na soltura (* e #)
   tAtividade = millis();
-  Serial.printf("\nTalos: boot (wake=%d, stealth=%u)\n", esp_sleep_get_wakeup_cause(), cfg.stealth);
+  Serial.printf("\nTalos: boot (wake=%d, stealth=%u, D12 %s)\n", esp_sleep_get_wakeup_cause(), cfg.stealth,
+                d12Livre() ? "livre: todas as teclas acordam" : "strapping: 4 teclas nao acordam");
   checaBateria();
   uint32_t agora = time(nullptr);
   if (!cfg.bloqueado && agora < cfg.lastLockTs) {  // relógio zerou (sem bateria): janela W_REC recomeça agora
@@ -401,36 +496,36 @@ void setup() {
 void loop() {
   delay(1);  // cede ao idle task (WAITI) em vez de girar a CPU
   tickPadrao();
+  atualizaTela();
   char k = leTecla();
   uint32_t agora = millis();
   if (k || estavel) tAtividade = agora;
 
   if (st == S5_ACESSO) {  // RF-17
+    if (k == K_ADMIN) {  // troca de senha: só enquanto a tranca está aberta (RF-06)
+      digitalWrite(PIN_TRANCA, LOW);
+      entra(S8_TROCA);
+      return;
+    }
     bool fechada = TEM_SENSOR_PORTA && digitalRead(PIN_PORTA) == LOW;
     if (TEM_SENSOR_PORTA && !fechada) portaAbriu = true;
     if ((portaAbriu && fechada) || agora - tEstado >= T_ACIO) entra(S7_TRANCA);
     return;
   }
 
-  if (agora - tAtividade >= T_DESC) dorme();  // RF-12
-  // Acordou e ninguém respondeu ao desafio: dorme já, sem piscar/bipar até T_DESC.
-  if (st == S2_DESAFIO && !len && agora - tAtividade >= T_INAT) dorme();
-  if ((st == S3_SENHA || st == S8_TROCA || (st == S2_DESAFIO && len)) && agora - tAtividade >= T_INAT) {
-    Serial.println("Timeout de inatividade");  // RF-02
-    entra(S1_ENTROPIA);
-    return;
+  if (agora - tAtividade >= T_INAT) {  // RF-02: descarta a entrada parcial e dorme
+    if (len) Serial.println("Timeout de inatividade");
+    entra(S0_DESCANSO);
   }
   if (!k) return;
 
-  if (k == K_ADMIN && st != S8_TROCA && autenticado && agora - tAuth < W_ADM) { entra(S8_TROCA); return; }
-
   bool digito = k >= '0' && k <= '9';
   if (st == S2_DESAFIO) {  // RF-07: compara dígito a dígito
-    if (k == K_LIMPAR) { len = 0; PLAY(P_CLIQUE); mostraDesafio(); return; }
+    if (k == K_LIMPAR) { len = 0; PLAY(P_CLIQUE); if (!TEM_DISPLAY) mostraDesafio(); return; }
     if (!digito) { PLAY(P_LEVE); return; }
     if (k - '0' != (len ? d2 : d1)) {
       Serial.println("Desafio incorreto");
-      if (DESAFIO_CONTA_FALHA) { contaTentativa(); registraFalha(); }
+      if (DESAFIO_CONTA_FALHA) { contaTentativa(); registraFalha(S1_ENTROPIA); }
       else { PLAY(P_ERRO); entra(S1_ENTROPIA); }
       return;
     }
