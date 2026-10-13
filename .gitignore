@@ -55,3 +55,4 @@ dkms.conf
 *.dwo
 
 .pio/
+__pycache__/

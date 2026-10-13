@@ -25,8 +25,8 @@ constexpr bool     TEM_DISPLAY         = false;  // módulo TM1637 de 6 dígitos
 constexpr uint8_t  BRILHO_DISPLAY      = 4;      // 0..7
 constexpr bool     DEBUG_TECLADO       = false;  // imprime cada tecla lida (revela a senha: só p/ diagnóstico)
 constexpr bool     TECLADO_INVERTIDO   = true;   // fios na ordem 8..1 (D32 = fio 8); false = ordem do guia
-// Bateria: 12 V (exigida pelo solenoide). Divisor R1 = 330k (topo), R2 = 100k (base).
-constexpr float    V_LOW   = 10.5f;
+// Bateria de 9 V (alimenta o VIN e o solenoide). Divisor R1 = 330k (topo), R2 = 100k (base).
+constexpr float    V_LOW   = 7.0f;
 constexpr float    BAT_DIV = (330.0f + 100.0f) / 100.0f;  // calibre com multímetro
 
 // ---------------- Pinos ----------------

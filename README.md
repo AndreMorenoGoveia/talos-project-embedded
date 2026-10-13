@@ -2,7 +2,7 @@
 
 Firmware para **ESP32 DevKit V1**, baseado na monografia do Grupo 7 (PCS3848). Todo o código está em `src/main.cpp`.
 
-**Guia completo de montagem e operação (com diagrama):** [docs/Guia_Montagem_Talos.pdf](docs/Guia_Montagem_Talos.pdf). Para regerar o PDF, rode `python3 docs/gerar_guia.py` (precisa do `reportlab`).
+**Guias (PDF):** [montagem e operação](docs/Guia_Montagem_Talos.pdf) · [casos de teste](docs/Guia_Testes_Talos.pdf). Para regerar: `python3 docs/gerar_guia.py` e `python3 docs/gerar_testes.py` (precisam do `reportlab`).
 
 ## Compilar e gravar
 
@@ -21,14 +21,14 @@ Uso de memória com -O3: Flash 23,8% (312 KB), RAM 7,1% (23 KB).
 |---|---|---|
 | Teclado fios 1–8 (L1..L4, C1..C4) | 32, 33, 25, 26, 27, 14, 12, 13 | em sequência D32 → D13, sem resistores. Se as teclas saírem espelhadas, troque `TECLADO_INVERTIDO` (padrão `true`: D32 = fio 8). Todas as teclas acordam o cofre se o eFuse de 3,3 V estiver gravado (veja abaixo) |
 | Solenoide FEC-91 | 16 | via MOSFET logic-level (ex.: IRLZ44N), **resistor de 10k do gate ao GND** e **diodo 1N4007** em antiparalelo com a bobina |
-| Buzzer ativo 5 V | 17 | via NPN (ex.: BC547 + 1k na base); buzzer entre 5 V e o coletor |
+| Buzzer ativo | 17 (TX2) | direto: perna longa (+) no TX2, curta (–) no GND |
 | LED indicador | 2 | LED azul da placa; para ficar visível, ligue um LED externo (+220 Ω) no mesmo pino |
-| Bateria (ADC) | 36 (VP) | divisor 330k (topo) / 100k (GND) |
+| Bateria (ADC, opcional) | 36 (VP) | divisor 330k (topo) / 100k (GND) |
 | Display 6 dígitos TM1637 (a caminho) | DIO 18, CLK 19 | VCC no **3V3**, não no 5 V; ative `TEM_DISPLAY` quando ligar |
 | Sensor de porta (opcional) | 39 (VN) | reed switch para GND + pull-up externo de 10k; ative `TEM_SENSOR_PORTA` |
 
-Alimentação: o solenoide exige **12 V**. Use uma bateria/fonte de 12 V → buck para 5 V → pino `VIN` da placa.
-O limiar de bateria fraca (`V_LOW = 10,5 V`) e a razão do divisor (`BAT_DIV`) ficam no topo do `main.cpp`. Calibre `BAT_DIV` com um multímetro.
+Alimentação: **bateria de 9 V**: + no `VIN` e na fechadura, – no `GND`. Sem conversor de tensão.
+O limiar de bateria fraca (`V_LOW = 7,0 V`) e a razão do divisor (`BAT_DIV`) ficam no topo do `main.cpp`. Calibre `BAT_DIV` com um multímetro.
 
 ## Teclado
 

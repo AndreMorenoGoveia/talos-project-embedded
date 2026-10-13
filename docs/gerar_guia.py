@@ -189,71 +189,14 @@ def bandeira(d, x, y, texto, cor):
     txt(d, x, y + 11, texto, 7, "Sans-B", cor, "middle")
 
 
-def diodo_v(d, x, y1, y2, nome="", lado="right"):
-    """Diodo vertical, catodo para cima (y2)."""
-    m = (y1 + y2) / 2
-    linha(d, x, y1, x, m - 6)
-    linha(d, x, m + 6, x, y2)
-    d.add(Polygon([x - 6, m - 6, x + 6, m - 6, x, m + 5], fillColor=INK, strokeColor=INK, strokeWidth=0.8))
-    linha(d, x - 7, m + 6, x + 7, m + 6, INK, 1.6)
-    if nome:
-        dx, anc = (10, "start") if lado == "right" else (-10, "end")
-        txt(d, x + dx, m - 2, nome, 6.6, "Sans-B", anchor=anc)
 
 
-def bobina_v(d, x, y1, y2, n=4):
-    p = Path(strokeColor=INK, strokeWidth=1.2, fillColor=None)
-    passo = (y2 - y1) / n
-    p.moveTo(x, y1)
-    for i in range(n):
-        a = y1 + i * passo
-        p.curveTo(x + 9, a, x + 9, a + passo, x, a + passo)
-    d.add(p)
 
 
-def nmos(d, cx, cy):
-    """MOSFET canal N. Retorna (gate, dreno, fonte)."""
-    d.add(Circle(cx + 1, cy, 15, fillColor=H("#FFFFFF"), strokeColor=INK, strokeWidth=1))
-    linha(d, cx - 18, cy, cx - 6, cy)
-    linha(d, cx - 6, cy - 9, cx - 6, cy + 9, INK, 1.4)
-    for a, b in [(6, 11), (-2.5, 2.5), (-11, -6)]:
-        linha(d, cx - 2, cy + a, cx - 2, cy + b, INK, 1.6)
-    linha(d, cx - 2, cy + 8.5, cx + 6, cy + 8.5)
-    linha(d, cx + 6, cy + 8.5, cx + 6, cy + 20)
-    linha(d, cx - 2, cy - 8.5, cx + 6, cy - 8.5)
-    linha(d, cx + 6, cy - 8.5, cx + 6, cy - 20)
-    linha(d, cx - 2, cy, cx + 6, cy)
-    linha(d, cx + 6, cy, cx + 6, cy - 8.5)
-    d.add(Polygon([cx - 1.5, cy, cx + 3, cy + 2.6, cx + 3, cy - 2.6], fillColor=INK, strokeColor=None))
-    txt(d, cx - 16, cy + 3, "G", 5.8, "Sans-B", MUTED)
-    txt(d, cx + 9, cy + 15, "D", 5.8, "Sans-B", MUTED)
-    txt(d, cx + 9, cy - 19, "S", 5.8, "Sans-B", MUTED)
-    return (cx - 18, cy), (cx + 6, cy + 20), (cx + 6, cy - 20)
 
 
-def npn(d, cx, cy):
-    """Transistor NPN. Retorna (base, coletor, emissor)."""
-    d.add(Circle(cx, cy, 13, fillColor=H("#FFFFFF"), strokeColor=INK, strokeWidth=1))
-    linha(d, cx - 16, cy, cx - 4, cy)
-    linha(d, cx - 4, cy - 7, cx - 4, cy + 7, INK, 1.6)
-    linha(d, cx - 4, cy + 3, cx + 6, cy + 9)
-    linha(d, cx + 6, cy + 9, cx + 6, cy + 18)
-    linha(d, cx - 4, cy - 3, cx + 6, cy - 9)
-    linha(d, cx + 6, cy - 9, cx + 6, cy - 18)
-    d.add(Polygon([cx + 6, cy - 9, cx + 0.6, cy - 8.6, cx + 3.4, cy - 4.4], fillColor=INK, strokeColor=None))
-    txt(d, cx - 14, cy + 3, "B", 5.8, "Sans-B", MUTED)
-    txt(d, cx + 9, cy + 12, "C", 5.8, "Sans-B", MUTED)
-    txt(d, cx + 9, cy - 16, "E", 5.8, "Sans-B", MUTED)
-    return (cx - 16, cy), (cx + 6, cy + 18), (cx + 6, cy - 18)
 
 
-def buzzer(d, cx, cy, r=12):
-    """Buzzer ativo (vista de cima). Terminal + em cima, - embaixo."""
-    d.add(Circle(cx, cy, r, fillColor=H("#202020"), strokeColor=H("#000000"), strokeWidth=1))
-    d.add(Circle(cx, cy, r * 0.28, fillColor=H("#555555"), strokeColor=None))
-    txt(d, cx - r - 6, cy + r - 6, "+", 9, "Sans-B", C["v12"], "middle")
-    linha(d, cx, cy + r, cx, cy + r + 4)
-    linha(d, cx, cy - r, cx, cy - r - 4)
 
 
 def led_v(d, x, y1, y2, cor=C["led"]):
@@ -278,50 +221,12 @@ def cap_v(d, x, y1, y2, valor, lado="right"):
     txt(d, x + dx, m - 2, valor, 6.6, "Sans-B", anchor=anc)
 
 
-def reed_h(d, x1, x2, y):
-    m = (x1 + x2) / 2
-    linha(d, x1, y, m - 9, y)
-    linha(d, m + 9, y, x2, y)
-    linha(d, m - 9, y, m + 7, y + 6, INK, 1.3)
-    d.add(Rect(m - 14, y - 6, 28, 15, rx=7, ry=7, fillColor=None, strokeColor=MUTED, strokeWidth=0.8,
-               strokeDashArray=[2, 1.5]))
 
 
-def pnp(d, cx, cy):
-    """Transistor PNP (emissor em cima). Retorna (base, emissor, coletor)."""
-    d.add(Circle(cx, cy, 13, fillColor=H("#FFFFFF"), strokeColor=INK, strokeWidth=1))
-    linha(d, cx - 16, cy, cx - 4, cy)
-    linha(d, cx - 4, cy - 7, cx - 4, cy + 7, INK, 1.6)
-    linha(d, cx - 4, cy + 3, cx + 6, cy + 9)
-    linha(d, cx + 6, cy + 9, cx + 6, cy + 18)
-    linha(d, cx - 4, cy - 3, cx + 6, cy - 9)
-    linha(d, cx + 6, cy - 9, cx + 6, cy - 18)
-    d.add(Polygon([cx - 2.7, cy + 3.8, cx + 0.3, cy + 8.6, cx + 2.9, cy + 4.2], fillColor=INK, strokeColor=None))
-    txt(d, cx - 14, cy + 3, "B", 5.8, "Sans-B", MUTED)
-    txt(d, cx + 9, cy + 12, "E", 5.8, "Sans-B", MUTED)
-    txt(d, cx + 9, cy - 16, "C", 5.8, "Sans-B", MUTED)
-    return (cx - 16, cy), (cx + 6, cy + 18), (cx + 6, cy - 18)
 
 
-def diodo_h(d, x1, x2, y, nome=""):
-    """Diodo horizontal, catodo à direita (x2)."""
-    m = (x1 + x2) / 2
-    linha(d, x1, y, m - 6, y)
-    linha(d, m + 6, y, x2, y)
-    d.add(Polygon([m - 6, y - 6, m - 6, y + 6, m + 5, y], fillColor=INK, strokeColor=INK, strokeWidth=0.8))
-    linha(d, m + 6, y - 7, m + 6, y + 7, INK, 1.6)
-    if nome:
-        txt(d, m, y - 15, nome, 6.6, "Sans-B", anchor="middle")
 
 
-def bobina_h(d, x1, x2, y, n=4):
-    p = Path(strokeColor=INK, strokeWidth=1.2, fillColor=None)
-    passo = (x2 - x1) / n
-    p.moveTo(x1, y)
-    for i in range(n):
-        a = x1 + i * passo
-        p.curveTo(a, y + 9, a + passo, y + 9, a + passo, y)
-    d.add(p)
 
 
 SEG7 = {"0": 0x3F, "1": 0x06, "2": 0x5B, "3": 0x4F, "4": 0x66, "5": 0x6D, "6": 0x7D, "7": 0x07, "8": 0x7F,
@@ -374,13 +279,13 @@ def etiqueta(d, x, y, texto, cor, anchor="start", size=6.6):
 ESQ = ["EN", "VP", "VN", "D34", "D35", "D32", "D33", "D25", "D26", "D27", "D14", "D12", "D13", "GND", "VIN"]
 DIR = ["D23", "D22", "TX0", "RX0", "D21", "D19", "D18", "D5", "TX2", "RX2", "D4", "D2", "D15", "GND", "3V3"]
 GPIO_ESQ = ["reset", "GPIO36", "GPIO39", "GPIO34", "GPIO35", "GPIO32", "GPIO33", "GPIO25", "GPIO26", "GPIO27",
-            "GPIO14", "GPIO12", "GPIO13", "terra", "5 V entrada"]
+            "GPIO14", "GPIO12", "GPIO13", "terra", "entrada (bateria)"]
 GPIO_DIR = ["GPIO23", "GPIO22", "GPIO1", "GPIO3", "GPIO21", "GPIO19", "GPIO18", "GPIO5", "GPIO17", "GPIO16",
             "GPIO4", "GPIO2", "GPIO15", "terra", "3,3 V saída"]
 
 USO = {  # (lado, índice) -> cor do fio
     ("L", 1): C["bat"], ("L", 2): C["door"], ("L", 5): KP[0], ("L", 6): KP[1], ("L", 7): KP[2], ("L", 8): KP[3],
-    ("L", 9): KP[4], ("L", 10): KP[5], ("L", 11): KP[6], ("L", 12): KP[7], ("L", 13): C["gnd"], ("L", 14): C["v5"],
+    ("L", 9): KP[4], ("L", 10): KP[5], ("L", 11): KP[6], ("L", 12): KP[7], ("L", 13): C["gnd"], ("L", 14): C["v12"],
     ("R", 8): C["buz"], ("R", 9): C["lock"], ("R", 11): C["led"], ("R", 14): C["v33"],
     ("R", 5): C["clk"], ("R", 6): C["dio"],
 }
@@ -556,7 +461,7 @@ def diagrama_completo():
     fio(d, [x, y, 262, y], C["bat"])
     ponto(d, 262, y)
     res_v(d, 262, y, 432, "330 kΩ", "R1", "right")
-    bandeira(d, 262, 432, "+12 V", C["v12"])
+    bandeira(d, 262, 432, "+9 V", C["v12"])
     res_h(d, 196, 262, y, "100 kΩ", "R2")
     terra(d, 196, y)
     txt(d, 300, y + 6, "bateria (ADC)", 5.8, "Sans-I", C["bat"], "middle")
@@ -566,31 +471,15 @@ def diagrama_completo():
     fio(d, [x, y, 300, y], C["door"], dash=[3, 2])
     etiqueta(d, 300, y, "sensor da porta (opc., §5.6)", C["door"], "end")
 
-    # ---- alimentação (VIN/GND -> buck, embaixo à esquerda)
+    # ---- alimentação: bateria 9 V direto no VIN
     xg, yg = pad("L", 13)
     xv, yv = pad("L", 14)
-    fio(d, [xg, yg, 300, yg, 300, 48, 185, 48], C["gnd"], 2.2)
-    fio(d, [xv, yv, 312, yv, 312, 24, 185, 24], C["v5"], 2.2)
-    txt(d, 240, 52, "GND", 6.4, "Sans-B", C["gnd"], "middle")
-    txt(d, 240, 28, "+5 V (VIN)", 6.4, "Sans-B", C["v5"], "middle")
-    d.add(Rect(50, 6, 135, 64, rx=3, ry=3, fillColor=H("#1F4E8C"), strokeColor=H("#123564"), strokeWidth=1))
-    d.add(Rect(100, 14, 26, 26, rx=4, ry=4, fillColor=H("#3A3F45"), strokeColor=H("#222"), strokeWidth=0.6))
-    for cx_ in (82, 144):
-        d.add(Circle(cx_, 27, 8, fillColor=H("#2A2A2A"), strokeColor=H("#777"), strokeWidth=0.8))
-        d.add(Circle(cx_, 27, 2.6, fillColor=H("#888"), strokeColor=None))
-    d.add(Rect(106, 44, 13, 10, fillColor=H("#2B6CD4"), strokeColor=H("#0F3E85"), strokeWidth=0.6))
-    d.add(Circle(112.5, 49, 2.6, fillColor=H("#E3C26A"), strokeColor=None))
-    txt(d, 117, 60, "LM2596 · ajuste p/ 5,0 V", 6, "Sans-B", white, "middle")
-    for yy, rot in [(48, "OUT–"), (24, "OUT+")]:
-        d.add(Rect(179, yy - 4, 6, 8, fillColor=H("#D9B44A"), strokeColor=None))
-        txt(d, 176, yy - 2.2, rot, 5.4, "Sans-B", white, "end")
-    for yy, rot in [(48, "IN+"), (24, "IN–")]:
-        d.add(Rect(50, yy - 4, 6, 8, fillColor=H("#D9B44A"), strokeColor=None))
-        txt(d, 59, yy - 2.2, rot, 5.4, "Sans-B", white)
-    fio(d, [50, 48, 36, 48, 36, 62], C["v12"], 2.2)
-    bandeira(d, 36, 62, "+12 V", C["v12"])
-    fio(d, [50, 24, 22, 24], C["gnd"], 2.2)
-    terra(d, 22, 24)
+    b = bateria9v(d, 40, 12, 100, 46, mais_em_cima=False)
+    txt(d, 90, 66, "Bateria 9 V", 7.2, "Sans-B", NAVY, "middle")
+    fio(d, [b["+"][0], b["+"][1], 312, b["+"][1], 312, yv, xv, yv], C["v12"], 2.2)
+    fio(d, [b["-"][0], b["-"][1], 300, b["-"][1], 300, yg, xg, yg], C["gnd"], 2.2)
+    txt(d, 230, b["+"][1] + 4, "+9 V → VIN", 6.4, "Sans-B", C["v12"], "middle")
+    txt(d, 230, b["-"][1] + 4, "– → GND", 6.4, "Sans-B", C["gnd"], "middle")
 
     # ---- módulo display TM1637 (ainda não chegou: tracejado)
     mx, my = 566, 256
@@ -607,67 +496,30 @@ def diagrama_completo():
         linha(d, px - 12, py, px, py, cor, 1.6, [4, 2])
         etiqueta(d, px - 12, py, rot, cor, "end")
 
-    # ---- fechadura solenoide (RX2 = GPIO16)
+    # ---- fechadura: bloco (montagem detalhada na §4.3)
     x, y = pad("R", 9)
-    fio(d, [x, y, 486, y], C["lock"])
-    txt(d, 474, y - 9, "GPIO16", 5.6, "Sans-I", C["lock"], "middle")
-    res_h(d, 486, 526, y, "100 Ω")
-    linha(d, 526, y, 550, y)
-    ponto(d, 538, y)
-    res_v(d, 538, 158, y, "10 kΩ", "", "left")
-    terra(d, 538, 158)
-    g, dr, so = nmos(d, 568, y)
-    txt(d, 590, y - 4, "IRLZ44N", 6.4, "Sans-B")
-    linha(d, so[0], so[1], so[0], 158)
-    terra(d, so[0], 158)
-    linha(d, dr[0], dr[1], dr[0], 226)
-    linha(d, dr[0], 226, 596, 226)
-    bobina_h(d, 596, 644, 226)
-    linha(d, 644, 226, 700, 226)
-    bandeira(d, 700, 226, "+12 V", C["v12"])
-    for xx in (590, 650):
-        linha(d, xx, 226, xx, 240)
-        ponto(d, xx, 226)
-    diodo_h(d, 590, 650, 240)
-    txt(d, 656, 236, "1N4007", 6.2, "Sans-B")
-    txt(d, 620, 213, "bobina", 5.6, "Sans-I", MUTED, "middle")
-    # fechadura física
-    lx, ly = 655, 160
-    linha(d, 620, 208, lx + 18, ly + 32, MUTED, 0.7, [2, 2])
-    d.add(Rect(lx, ly, 58, 32, rx=2, ry=2, fillColor=H("#C9CED4"), strokeColor=H("#7D8790"), strokeWidth=1))
-    d.add(Rect(lx + 3, ly + 3, 32, 26, fillColor=H("#AEB5BD"), strokeColor=H("#8C949D"), strokeWidth=0.6))
-    p = Path(fillColor=H("#E8EBEE"), strokeColor=H("#7D8790"), strokeWidth=0.8)
-    p.moveTo(lx + 58, ly + 8); p.lineTo(lx + 70, ly + 8); p.lineTo(lx + 77, ly + 19); p.lineTo(lx + 58, ly + 24)
-    p.closePath()
-    d.add(p)
-    txt(d, lx + 19, ly + 13, "FEC-91", 5.6, "Sans-B", H("#3A4350"), "middle")
-    txt(d, lx + 82, ly + 26, "Fechadura", 6.2, "Sans-B")
-    txt(d, lx + 82, ly + 18, "solenoide 12 V", 6.2, "Sans-B")
-    txt(d, lx + 82, ly + 10, "(a bobina", 5.6, "Sans-I", MUTED)
-    txt(d, lx + 82, ly + 3, "acima)", 5.6, "Sans-I", MUTED)
+    fio(d, [x, y, 566, y], C["lock"])
+    txt(d, 500, y + 4, "GPIO16", 5.6, "Sans-I", C["lock"], "middle")
+    bx, by = 566, 100
+    d.add(Rect(bx, by, 200, 112, rx=6, ry=6, fillColor=H("#F7F8FA"), strokeColor=C["lock"], strokeWidth=1.2))
+    txt(d, bx + 100, by + 100, "FECHADURA (detalhe: §4.3)", 6.8, "Sans-B", C["lock"], "middle")
+    to220(d, bx + 40, by + 48, "IRLZ44N")
+    resistor_fis(d, bx + 70, by + 20, bx + 70, by + 70, "10 kΩ")
+    diodo_fis(d, bx + 92, by + 20, bx + 92, by + 70)
+    fechadura_fis(d, bx + 104, by + 22)
+    d.add(Rect(bx - 3, y - 4, 7, 8, fillColor=H("#D9B44A"), strokeColor=None))
+    txt(d, bx + 7, y - 13, "sinal", 5.6, "Sans-I", MUTED)
+    for yy, rot, cor in [(150, "+9 V", C["v12"]), (124, "GND", C["gnd"])]:
+        linha(d, bx - 10, yy, bx, yy, cor, 1.8)
+        etiqueta(d, bx - 10, yy, rot, cor, "end")
 
-    # ---- buzzer (TX2 = GPIO17), desenhado embaixo e ligado por etiqueta
+    # ---- buzzer direto no TX2
     x, y = pad("R", 8)
-    fio(d, [x, y, 470, y], C["buz"])
-    etiqueta(d, 470, y, "TX2 → buzzer", C["buz"])
-    yb = 110
-    etiqueta(d, 470, yb, "TX2 (GPIO17)", C["buz"])
-    linha(d, 529, yb, 534, yb)
-    res_h(d, 534, 574, yb, "1 kΩ")
-    linha(d, 574, yb, 596, yb)
-    ponto(d, 584, yb)
-    res_v(d, 584, 74, yb, "10 kΩ", "", "left")
-    terra(d, 584, 74)
-    b, c_, e = npn(d, 612, yb)
-    txt(d, 630, yb - 10, "BC547", 6.4, "Sans-B")
-    linha(d, e[0], e[1], e[0], 78)
-    terra(d, e[0], 78)
-    linha(d, c_[0], c_[1], c_[0], c_[1] + 2)
-    buzzer(d, c_[0], c_[1] + 16, 10)
-    linha(d, c_[0], c_[1] + 30, c_[0], c_[1] + 34)
-    bandeira(d, c_[0], c_[1] + 34, "+5 V", C["v5"])
-    txt(d, c_[0] + 16, c_[1] + 18, "Buzzer ativo 5 V", 6.4, "Sans-B")
-    txt(d, c_[0] + 16, c_[1] + 10, "(+) para cima", 5.6, "Sans-I", MUTED)
+    bz = buzzer_fis(d, 524, 240, 10)
+    fio(d, [x, y, bz["+"][0], y, bz["+"][0], bz["+"][1]], C["buz"])
+    fio(d, [bz["-"][0], bz["-"][1], bz["-"][0] + 14, bz["-"][1]], C["gnd"], 1.6)
+    etiqueta(d, bz["-"][0] + 14, bz["-"][1], "GND", C["gnd"])
+    txt(d, 511, 237, "Buzzer", 6.4, "Sans-B", INK, "end")
 
     # ---- outros pinos do lado direito
     x, y = pad("R", 11)
@@ -681,7 +533,7 @@ def diagrama_completo():
     lx, ly = 22, 452
     d.add(Rect(14, 333, 164, 131, rx=4, ry=4, fillColor=H("#F7F8FA"), strokeColor=LINE, strokeWidth=0.8))
     txt(d, lx, ly, "LEGENDA DOS FIOS", 7, "Sans-B", NAVY)
-    itens = [(C["v12"], "+12 V (bateria)"), (C["v5"], "+5 V (saída do buck)"), (C["gnd"], "GND (terra comum)"),
+    itens = [(C["v12"], "+9 V (bateria)"), (C["gnd"], "GND (terra comum)"),
              (KP[1], "teclado: linhas L1–L4"), (KP[5], "teclado: colunas C1–C4"),
              (C["dio"], "display: DIO/CLK (a ligar)"), (C["lock"], "comando da fechadura"),
              (C["buz"], "comando do buzzer"), (C["bat"], "leitura da bateria"), (C["door"], "opcional (tracejado)")]
@@ -692,8 +544,8 @@ def diagrama_completo():
     # ---- avisos (embaixo à direita)
     d.add(Rect(662, 2, 106, 92, rx=4, ry=4, fillColor=H("#FFF4E8"), strokeColor=H("#F2C08F"), strokeWidth=0.8))
     txt(d, 669, 82, "⚠ ANTES DE LIGAR", 6.8, "Sym-B", H("#B85C00"))
-    for k, s_ in enumerate(["GND é um só ponto.", "Buck em 5,0 V antes", "de ligar o ESP32.",
-                            "No D12 só o fio 7.", "10 kΩ no gate e na", "base: obrigatórios.", "Display no 3V3."]):
+    for k, s_ in enumerate(["GND é um só ponto.", "Bateria 9 V no VIN", "(nunca no 3V3).",
+                            "10 kΩ no gate:", "obrigatório.", "Diodo: faixa no +.", "Display no 3V3."]):
         txt(d, 669, 70 - 9.4 * k, s_, 6.1)
     return d
 
@@ -705,9 +557,9 @@ def figura_pinagem():
                  5: ("teclado fio 1 · L1", KP[0]), 6: ("teclado fio 2 · L2", KP[1]), 7: ("teclado fio 3 · L3", KP[2]),
                  8: ("teclado fio 4 · L4", KP[3]), 9: ("teclado fio 5 · C1", KP[4]), 10: ("teclado fio 6 · C2", KP[5]),
                  11: ("teclado fio 7 · C3 (só ele!)", KP[6]), 12: ("teclado fio 8 · C4", KP[7]),
-                 13: ("GND comum", C["gnd"]), 14: ("+5 V do buck", C["v5"])}
+                 13: ("GND comum (– da bateria)", C["gnd"]), 14: ("+9 V da bateria", C["v12"])}
     funcs_dir = {5: ("display: CLK (TM1637)", C["clk"]), 6: ("display: DIO (TM1637)", C["dio"]),
-                 8: ("buzzer (base do BC547)", C["buz"]), 9: ("tranca (gate do MOSFET)", C["lock"]),
+                 8: ("buzzer (+)", C["buz"]), 9: ("tranca (gate do MOSFET)", C["lock"]),
                  11: ("LED de status", C["led"]), 13: ("GND (opcional)", C["gnd"]),
                  14: ("VCC do display + pull-up sensor", C["v33"])}
     for i in range(15):
@@ -761,133 +613,11 @@ def figura_teclado():
     return d
 
 # ------------------------------------------------------------------ esquemáticos por bloco
-def esq_alimentacao():
-    d = Drawing(500, 190)
-    # bateria
-    bx, by = 40, 70
-    linha(d, bx, by + 70, bx, by + 34)
-    for k in range(3):
-        y = by + 30 - k * 11
-        linha(d, bx - 12, y, bx + 12, y, INK, 1.6)
-        linha(d, bx - 6, y - 4, bx + 6, y - 4, INK, 3)
-    linha(d, bx, by + 4 - 22 + 22 - 12, bx, by - 30)
-    txt(d, bx - 16, by + 24, "+", 9, "Sans-B", C["v12"], "end")
-    txt(d, bx + 18, by + 22, "Bateria 12 V", 7, "Sans-B")
-    txt(d, bx + 18, by + 13, "pack 3S 18650 + BMS", 6, "Sans-I", MUTED)
-    txt(d, bx + 18, by + 5, "(ou fonte 12 V 2 A)", 6, "Sans-I", MUTED)
-    # fusível
-    fio(d, [bx, by + 70, bx, 160, 70, 160], C["v12"], 2)
-    d.add(Rect(70, 155, 26, 10, rx=5, ry=5, fillColor=H("#FFFDF5"), strokeColor=INK, strokeWidth=1))
-    linha(d, 70, 160, 96, 160, INK, 0.8)
-    txt(d, 83, 170, "fusível 2 A", 6.2, "Sans-B", INK, "middle")
-    fio(d, [96, 160, 480, 160], C["v12"], 2)
-    txt(d, 480, 165, "+12 V", 7.5, "Sans-B", C["v12"], "end")
-    fio(d, [bx, by - 30, bx, 20, 480, 20], C["gnd"], 2)
-    txt(d, 480, 25, "GND comum", 7.5, "Sans-B", C["gnd"], "end")
-    # capacitor de reserva
-    ponto(d, 140, 160)
-    ponto(d, 140, 20)
-    linha(d, 140, 160, 140, 98)
-    linha(d, 140, 82, 140, 20)
-    linha(d, 133, 98, 147, 98, INK, 1.6)
-    p = Path(strokeColor=INK, strokeWidth=1.6, fillColor=None)
-    p.moveTo(133, 80); p.curveTo(137, 84, 143, 84, 147, 80)
-    d.add(p)
-    txt(d, 131, 100, "+", 7, "Sans-B", C["v12"], "end")
-    txt(d, 152, 92, "470 µF", 6.6, "Sans-B")
-    txt(d, 152, 84, "25 V", 6, "Sans", MUTED)
-    # ramos
-    for x, rot in [(215, "solenoide (§5.3)"), (285, "R1 do divisor (§5.6)")]:
-        ponto(d, x, 160)
-        linha(d, x, 160, x, 130, C["v12"], 1.4)
-        txt(d, x, 120, "→ " + rot, 6.6, "Sym", INK, "middle")
-    # buck
-    ponto(d, 330, 160)
-    ponto(d, 330, 20)
-    fio(d, [330, 160, 330, 120, 342, 120], C["v12"], 1.6)
-    fio(d, [330, 20, 330, 68, 342, 68], C["gnd"], 1.6)
-    d.add(Rect(342, 58, 70, 72, rx=3, ry=3, fillColor=H("#1F4E8C"), strokeColor=H("#123564"), strokeWidth=1))
-    txt(d, 377, 100, "LM2596", 7, "Sans-B", white, "middle")
-    txt(d, 377, 90, "12 → 5,0 V", 6.4, "Sans", white, "middle")
-    for y, r in [(120, "IN+"), (68, "IN–")]:
-        txt(d, 346, y - 2.3, r, 5.4, "Sans-B", H("#FFD27A"))
-    for y, r in [(120, "OUT+"), (68, "OUT–")]:
-        txt(d, 408, y - 2.3, r, 5.4, "Sans-B", H("#FFD27A"), "end")
-    fio(d, [412, 120, 432, 120], C["v5"], 2)
-    txt(d, 436, 117.5, "VIN do ESP32", 6.8, "Sans-B", C["v5"])
-    txt(d, 436, 108, "e +5 V do buzzer", 6, "Sans", MUTED)
-    fio(d, [412, 68, 420, 68, 420, 20], C["gnd"], 1.6)
-    ponto(d, 420, 20)
-    return d
-
-
-def esq_tranca():
-    d = Drawing(500, 200)
-    txt(d, 30, 100, "D16 / RX2", 7.5, "Mono-B", C["lock"])
-    txt(d, 30, 90, "(GPIO16)", 6.2, "Sans", MUTED)
-    fio(d, [80, 102, 150, 102], C["lock"], 1.8)
-    res_h(d, 150, 210, 102, "100 Ω", "R gate")
-    linha(d, 210, 102, 262, 102)
-    ponto(d, 236, 102)
-    res_v(d, 236, 40, 102, "10 kΩ", "pull-down", "left")
-    terra(d, 236, 40)
-    g, dr, so = nmos(d, 280, 102)
-    txt(d, 300, 99, "IRLZ44N", 7, "Sans-B")
-    txt(d, 300, 90, "(ou IRLB8721)", 6, "Sans-I", MUTED)
-    linha(d, so[0], so[1], so[0], 40)
-    terra(d, so[0], 40)
-    linha(d, dr[0], dr[1], dr[0], 135)
-    bobina_v(d, dr[0], 135, 175)
-    linha(d, dr[0], 175, dr[0], 182)
-    bandeira(d, dr[0], 182, "+12 V", C["v12"])
-    for yy in (135, 175):
-        linha(d, dr[0], yy, 330, yy)
-        ponto(d, dr[0], yy)
-    diodo_v(d, 330, 135, 175, "1N4007", "right")
-    txt(d, dr[0] - 10, 157, "solenoide", 6.6, "Sans-B", INK, "end")
-    txt(d, dr[0] - 10, 149, "FEC-91", 6.2, "Sans", MUTED, "end")
-    d.add(Rect(380, 40, 115, 140, rx=4, ry=4, fillColor=H("#F7F8FA"), strokeColor=LINE, strokeWidth=0.8))
-    for k, s in enumerate(["Por que cada peça?", "", "100 Ω: limita o pico de", "corrente no gate.",
-                           "10 kΩ: mantém o MOSFET", "desligado no boot e no", "deep sleep (GPIO solto).",
-                           "1N4007: absorve o pico de", "tensão quando a bobina", "desliga. Faixa = +12 V.",
-                           "GPIO HIGH = destrava."]):
-        txt(d, 388, 168 - 11 * k, s, 6.4, "Sans-B" if k == 0 else "Sans", NAVY if k == 0 else INK)
-    return d
-
-
-def esq_buzzer():
-    d = Drawing(500, 170)
-    txt(d, 30, 80, "TX2", 7.5, "Mono-B", C["buz"])
-    txt(d, 30, 70, "(GPIO17)", 6.2, "Sans", MUTED)
-    fio(d, [60, 82, 140, 82], C["buz"], 1.8)
-    res_h(d, 140, 200, 82, "1 kΩ", "R base")
-    linha(d, 200, 82, 252, 82)
-    ponto(d, 224, 82)
-    res_v(d, 224, 25, 82, "10 kΩ", "pull-down", "left")
-    terra(d, 224, 25)
-    b, c_, e = npn(d, 268, 82)
-    txt(d, 290, 79, "BC547", 7, "Sans-B")
-    txt(d, 290, 70, "(ou BC337, 2N2222)", 6, "Sans-I", MUTED)
-    linha(d, e[0], e[1], e[0], 25)
-    terra(d, e[0], 25)
-    buzzer(d, c_[0], c_[1] + 20, 13)
-    linha(d, c_[0], c_[1], c_[0], c_[1] + 3)
-    linha(d, c_[0], c_[1] + 37, c_[0], 150)
-    bandeira(d, c_[0], 150, "+5 V", C["v5"])
-    txt(d, c_[0] + 20, c_[1] + 22, "Buzzer ativo 5 V", 6.8, "Sans-B")
-    txt(d, c_[0] + 20, c_[1] + 13, "perna longa / '+' para cima", 6, "Sans-I", MUTED)
-    d.add(Rect(380, 25, 115, 120, rx=4, ry=4, fillColor=H("#F7F8FA"), strokeColor=LINE, strokeWidth=0.8))
-    for k, s in enumerate(["Por que transistor?", "", "O buzzer de 5 V consome", "~30 mA: muito para um",
-                           "GPIO de 3,3 V. O BC547", "chaveia o buzzer.", "O 10 kΩ evita apito", "durante o deep sleep."]):
-        txt(d, 388, 133 - 11 * k, s, 6.4, "Sans-B" if k == 0 else "Sans", NAVY if k == 0 else INK)
-    return d
-
-
 def esq_sensores():
     d = Drawing(500, 175)
     # divisor
     txt(d, 70, 160, "Leitura da bateria", 7.5, "Sans-B", NAVY, "middle")
-    bandeira(d, 70, 135, "+12 V", C["v12"])
+    bandeira(d, 70, 135, "+9 V", C["v12"])
     res_v(d, 70, 85, 135, "330 kΩ", "R1", "right")
     ponto(d, 70, 85)
     res_v(d, 70, 30, 85, "100 kΩ", "R2", "left")
@@ -899,7 +629,7 @@ def esq_sensores():
     fio(d, [112, 85, 150, 85], C["bat"], 1.8)
     txt(d, 153, 83, "VP", 7.5, "Mono-B", C["bat"])
     txt(d, 153, 74, "(GPIO36)", 6, "Sans", MUTED)
-    txt(d, 70, 4, "12,6 V → 2,93 V no pino", 6.2, "Sym", MUTED, "middle")
+    txt(d, 70, 4, "9,6 V → 2,23 V no pino", 6.2, "Sym", MUTED, "middle")
     # LED
     txt(d, 255, 160, "LED externo (opcional)", 7.5, "Sans-B", NAVY, "middle")
     txt(d, 220, 128, "D2", 7.5, "Mono-B", C["led"])
@@ -931,103 +661,208 @@ def esq_sensores():
     return d
 
 # ------------------------------------------------------------------ figura: identificação de terminais
-def figura_componentes():
-    d = Drawing(500, 340)
-    # IRLZ44N (TO-220)
-    x, y = 40, 215
-    txt(d, x + 25, 328, "IRLZ44N (TO-220)", 7.5, "Sans-B", NAVY, "middle")
-    d.add(Rect(x, y + 50, 50, 28, fillColor=H("#C9CED4"), strokeColor=H("#7D8790"), strokeWidth=0.8))
-    d.add(Circle(x + 25, y + 66, 5.5, fillColor=white, strokeColor=H("#7D8790"), strokeWidth=0.8))
-    d.add(Rect(x, y + 10, 50, 42, fillColor=H("#1C1C1C"), strokeColor=None))
-    txt(d, x + 25, y + 34, "IRLZ44N", 6, "Sans-B", H("#BBBBBB"), "middle")
-    for k, (rot, cor) in enumerate([("G", C["lock"]), ("D", INK), ("S", C["gnd"])]):
-        lx = x + 10 + 15 * k
-        d.add(Rect(lx - 2, y - 30, 4, 40, fillColor=H("#C9CED4"), strokeColor=H("#7D8790"), strokeWidth=0.5))
-        txt(d, lx, y - 42, rot, 8, "Sans-B", cor, "middle")
-    for k, s in enumerate(["G = gate ← resistor 100 Ω", "D = dreno ← solenoide (–)", "S = fonte → GND",
-                           "letras para você, pernas para baixo"]):
-        txt(d, x - 10, y - 58 - 9 * k, s, 6, "Sym" if k < 3 else "Sans-I", INK if k < 3 else MUTED)
-    # BC547 (TO-92)
-    x, y = 205, 240
-    txt(d, x + 15, 328, "BC547 (TO-92)", 7.5, "Sans-B", NAVY, "middle")
-    p = Path(fillColor=H("#1C1C1C"), strokeColor=None)
-    p.moveTo(x, y + 20); p.lineTo(x + 30, y + 20); p.lineTo(x + 30, y + 44)
-    p.curveTo(x + 30, y + 64, x, y + 64, x, y + 44); p.closePath()
+# ------------------------------------------------------------------ componentes desenhados (vista real)
+FAIXAS = {"10 kΩ": ["#8B4513", "#111111", "#F28C28"], "100 kΩ": ["#8B4513", "#111111", "#E8C21A"],
+          "330 kΩ": ["#F28C28", "#F28C28", "#E8C21A"], "220 Ω": ["#D62828", "#D62828", "#8B4513"]}
+
+
+def resistor_fis(d, x1, y1, x2, y2, valor):
+    """Resistor de verdade (corpo bege com faixas de cor) entre dois pontos."""
+    linha(d, x1, y1, x2, y2, H("#9AA3AE"), 1.4)
+    mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+    vert = abs(x2 - x1) < abs(y2 - y1)
+    w, h = (9, 26) if vert else (26, 9)
+    d.add(Rect(mx - w / 2, my - h / 2, w, h, rx=4, ry=4, fillColor=H("#E9D3A8"), strokeColor=H("#B89B6A"),
+               strokeWidth=0.6))
+    for pos, cor in zip([-7, -3, 1, 7], FAIXAS[valor] + ["#C9A227"]):
+        if vert:
+            d.add(Rect(mx - w / 2, my - pos - 1.2, w, 2.4, fillColor=H(cor), strokeColor=None))
+        else:
+            d.add(Rect(mx + pos - 1.2, my - h / 2, 2.4, h, fillColor=H(cor), strokeColor=None))
+
+
+def diodo_fis(d, x1, y1, x2, y2):
+    """Diodo 1N4007 de verdade: corpo preto, faixa prateada (catodo) do lado de (x2, y2)."""
+    linha(d, x1, y1, x2, y2, H("#9AA3AE"), 1.4)
+    mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+    vert = abs(x2 - x1) < abs(y2 - y1)
+    w, h = (9, 22) if vert else (22, 9)
+    d.add(Rect(mx - w / 2, my - h / 2, w, h, rx=2, ry=2, fillColor=H("#1C1C1C"), strokeColor=None))
+    sx = 1 if (x2 > x1 if not vert else y2 > y1) else -1
+    if vert:
+        d.add(Rect(mx - w / 2, my + sx * 6 - 1.6, w, 3.2, fillColor=H("#D0D4D9"), strokeColor=None))
+    else:
+        d.add(Rect(mx + sx * 6 - 1.6, my - h / 2, 3.2, h, fillColor=H("#D0D4D9"), strokeColor=None))
+
+
+def to220(d, cx, yb, nome="IRLZ44N"):
+    """MOSFET em TO-220 de frente, pernas para baixo. Retorna as pontas das pernas G, D, S."""
+    d.add(Rect(cx - 18, yb + 30, 36, 16, fillColor=H("#C9CED4"), strokeColor=H("#7D8790"), strokeWidth=0.8))
+    d.add(Circle(cx, yb + 38, 3.5, fillColor=white, strokeColor=H("#7D8790"), strokeWidth=0.8))
+    d.add(Rect(cx - 18, yb, 36, 30, fillColor=H("#1C1C1C"), strokeColor=None))
+    txt(d, cx, yb + 17, nome, 5.4, "Sans-B", H("#BBBBBB"), "middle")
+    pernas = {}
+    for k, rot in enumerate("GDS"):
+        x = cx - 12 + 12 * k
+        d.add(Rect(x - 1.5, yb - 20, 3, 20, fillColor=H("#C9CED4"), strokeColor=H("#7D8790"), strokeWidth=0.4))
+        txt(d, x, yb + 4, rot, 6, "Sans-B", white, "middle")
+        pernas[rot] = (x, yb - 20)
+    return pernas
+
+
+def bateria9v(d, x, y, w=96, h=46, mais_em_cima=True):
+    """Bateria 9 V com clip. Terminais saem pela direita. Retorna {'+': (x, y), '-': (x, y)}."""
+    d.add(Rect(x + 2, y - 2, w, h, rx=4, ry=4, fillColor=H("#0B0B0B"), strokeColor=None))
+    d.add(Rect(x, y, w, h, rx=4, ry=4, fillColor=H("#1E1E1E"), strokeColor=H("#000000"), strokeWidth=0.8))
+    d.add(Rect(x, y + h * 0.28, w * 0.72, h * 0.44, fillColor=H("#E8B923"), strokeColor=None))
+    txt(d, x + w * 0.36, y + h / 2 - 5, "9V", 14, "Sans-B", H("#1E1E1E"), "middle")
+    d.add(Rect(x + w, y + 4, 12, h - 8, rx=2, ry=2, fillColor=H("#2B2B2B"), strokeColor=None))
+    ym, yn = (y + h * 0.7, y + h * 0.3) if mais_em_cima else (y + h * 0.3, y + h * 0.7)
+    txt(d, x + w + 16, ym + 3, "+", 9, "Sans-B", C["v12"])
+    txt(d, x + w + 16, yn + 3, "–", 9, "Sans-B", INK)
+    return {"+": (x + w + 12, ym), "-": (x + w + 12, yn)}
+
+
+def buzzer_fis(d, cx, cy, r=13):
+    """Buzzer visto de cima, pernas para baixo: + (mais longa) à esquerda."""
+    d.add(Circle(cx, cy, r, fillColor=H("#1C1C1C"), strokeColor=H("#000000"), strokeWidth=0.8))
+    d.add(Circle(cx, cy, r * 0.28, fillColor=H("#555555"), strokeColor=None))
+    txt(d, cx - r * 0.55, cy + r * 0.3, "+", 8, "Sans-B", white, "middle")
+    linha(d, cx - 4, cy - r, cx - 4, cy - r - 14, H("#9AA3AE"), 1.6)
+    linha(d, cx + 4, cy - r, cx + 4, cy - r - 10, H("#9AA3AE"), 1.6)
+    return {"+": (cx - 4, cy - r - 14), "-": (cx + 4, cy - r - 10)}
+
+
+def fechadura_fis(d, x, y):
+    """Fechadura solenoide FEC-91 com os 2 fios saindo pela esquerda (sem polaridade)."""
+    d.add(Rect(x, y, 66, 44, rx=2, ry=2, fillColor=H("#C9CED4"), strokeColor=H("#7D8790"), strokeWidth=1))
+    d.add(Rect(x + 4, y + 4, 36, 36, fillColor=H("#AEB5BD"), strokeColor=H("#8C949D"), strokeWidth=0.6))
+    p = Path(fillColor=H("#E8EBEE"), strokeColor=H("#7D8790"), strokeWidth=0.8)
+    p.moveTo(x + 66, y + 12); p.lineTo(x + 80, y + 12); p.lineTo(x + 88, y + 26); p.lineTo(x + 66, y + 32)
+    p.closePath()
     d.add(p)
-    txt(d, x + 15, y + 36, "BC", 5.5, "Sans-B", H("#BBBBBB"), "middle")
-    txt(d, x + 15, y + 28, "547", 5.5, "Sans-B", H("#BBBBBB"), "middle")
-    for k, (rot, cor) in enumerate([("C", INK), ("B", C["buz"]), ("E", C["gnd"])]):
-        lx = x + 5 + 10 * k
-        linha(d, lx, y + 20, lx, y - 20, H("#9AA3AE"), 1.6)
-        txt(d, lx, y - 32, rot, 8, "Sans-B", cor, "middle")
-    for k, s in enumerate(["C = coletor ← buzzer (–)", "B = base ← resistor 1 kΩ", "E = emissor → GND",
-                           "face reta para você"]):
-        txt(d, x - 20, y - 48 - 9 * k, s, 6, "Sym" if k < 3 else "Sans-I", INK if k < 3 else MUTED)
-    # 1N4007
-    x, y = 345, 280
-    txt(d, x + 40, 328, "Diodo 1N4007", 7.5, "Sans-B", NAVY, "middle")
-    linha(d, x, y, x + 80, y, H("#9AA3AE"), 1.6)
-    d.add(Rect(x + 22, y - 8, 36, 16, rx=3, ry=3, fillColor=H("#1C1C1C"), strokeColor=None))
-    d.add(Rect(x + 50, y - 8, 5, 16, fillColor=H("#D0D4D9"), strokeColor=None))
-    txt(d, x + 52, y - 20, "faixa = catodo (K)", 6.2, "Sans-B", INK, "middle")
-    txt(d, x + 52, y - 29, "vai no +12 V", 6, "Sans-I", MUTED, "middle")
-    txt(d, x + 10, y + 12, "A", 7, "Sans-B", MUTED, "middle")
-    txt(d, x + 72, y + 12, "K", 7, "Sans-B", MUTED, "middle")
-    # LED
-    x, y = 455, 270
-    txt(d, x, 328, "LED 5 mm", 7.5, "Sans-B", NAVY, "middle")
-    p = Path(fillColor=H("#5BC0EB"), strokeColor=H("#2F8FBF"), strokeWidth=0.8)
-    p.moveTo(x - 9, y + 10); p.lineTo(x - 9, y + 30); p.curveTo(x - 9, y + 44, x + 9, y + 44, x + 9, y + 30)
-    p.lineTo(x + 9, y + 10); p.closePath()
+    txt(d, x + 22, y + 19, "FEC-91", 6, "Sans-B", H("#3A4350"), "middle")
+    return {"a": (x, y + 10), "b": (x, y + 34)}
+
+
+def pino_esp(d, x, y, rot, sub=""):
+    """Caixinha azul representando um pino da placa ESP32. Retorna a ponta direita."""
+    d.add(Rect(x, y - 6, 58, 12, rx=2, ry=2, fillColor=H("#1D4F8F"), strokeColor=None))
+    txt(d, x + 29, y - 2.5, rot, 6.8, "Mono-B", white, "middle")
+    if sub:
+        txt(d, x + 29, y - 15, sub, 5.6, "Sans-I", MUTED, "middle")
+    return x + 58, y
+
+
+def ponte(d, x, y, cor, cor_baixo, w=1.9):
+    """Fio horizontal passando por cima de um fio vertical em (x, y) (salto)."""
+    d.add(Rect(x - 5, y - 2, 10, 4, fillColor=white, strokeColor=None))
+    linha(d, x, y - 3, x, y + 3, cor_baixo, w)
+    p = Path(strokeColor=cor, strokeWidth=w, fillColor=None, strokeLineCap=1)
+    p.moveTo(x - 5, y); p.curveTo(x - 5, y + 7, x + 5, y + 7, x + 5, y)
     d.add(p)
-    d.add(Rect(x - 11, y + 8, 22, 3, fillColor=H("#2F8FBF"), strokeColor=None))
-    linha(d, x - 4, y + 8, x - 4, y - 30, H("#9AA3AE"), 1.4)
-    linha(d, x + 4, y + 8, x + 4, y - 18, H("#9AA3AE"), 1.4)
-    txt(d, x - 4, y - 40, "+", 8, "Sans-B", C["v12"], "middle")
-    txt(d, x + 6, y - 28, "–", 8, "Sans-B", INK, "middle")
-    txt(d, x, y - 52, "longa = anodo", 6, "Sans-I", MUTED, "middle")
-    # buzzer
-    x, y = 70, 60
-    txt(d, x, 108, "Buzzer ativo 5 V", 7.5, "Sans-B", NAVY, "middle")
-    d.add(Circle(x, y + 30, 18, fillColor=H("#1C1C1C"), strokeColor=None))
-    d.add(Circle(x, y + 30, 4, fillColor=H("#555"), strokeColor=None))
-    txt(d, x - 10, y + 36, "+", 8, "Sans-B", C["v12"], "middle")
-    txt(d, x, y - 4, "'+' marcado no topo e", 6, "Sans-I", MUTED, "middle")
-    txt(d, x, y - 12, "perna mais longa = +", 6, "Sans-I", MUTED, "middle")
-    txt(d, x, y - 20, "(tire o adesivo só no final)", 6, "Sans-I", MUTED, "middle")
-    # buck
-    x, y = 170, 30
-    txt(d, x + 75, 108, "Módulo buck LM2596", 7.5, "Sans-B", NAVY, "middle")
-    d.add(Rect(x, y, 150, 64, rx=3, ry=3, fillColor=H("#1F4E8C"), strokeColor=H("#123564"), strokeWidth=1))
-    d.add(Rect(x + 52, y + 16, 34, 34, rx=4, ry=4, fillColor=H("#3A3F45"), strokeColor=None))
-    for cx_ in (x + 28, x + 112):
-        d.add(Circle(cx_, y + 33, 11, fillColor=H("#2A2A2A"), strokeColor=H("#777"), strokeWidth=0.8))
-    d.add(Rect(x + 95, y + 46, 16, 13, fillColor=H("#2B6CD4"), strokeColor=H("#0F3E85"), strokeWidth=0.6))
-    d.add(Circle(x + 103, y + 52.5, 3.5, fillColor=H("#E3C26A"), strokeColor=None))
-    txt(d, x + 122, y + 70, "trimpot", 6, "Sans-B", INK)
-    linha(d, x + 112, y + 56, x + 120, y + 68, MUTED, 0.6)
-    for yy, r in [(y + 52, "IN+"), (y + 12, "IN–")]:
-        d.add(Rect(x + 2, yy - 4, 7, 8, fillColor=H("#D9B44A"), strokeColor=None))
-        txt(d, x - 3, yy - 2.3, r, 6.4, "Sans-B", C["v12"] if "+" in r else INK, "end")
-    for yy, r in [(y + 52, "OUT+"), (y + 12, "OUT–")]:
-        d.add(Rect(x + 141, yy - 4, 7, 8, fillColor=H("#D9B44A"), strokeColor=None))
-        txt(d, x + 153, yy - 2.3, r, 6.4, "Sans-B", C["v5"] if "+" in r else INK)
-    # reed
-    x, y = 390, 70
-    txt(d, x + 40, 108, "Reed switch + ímã", 7.5, "Sans-B", NAVY, "middle")
-    linha(d, x, y + 20, x + 80, y + 20, H("#9AA3AE"), 1.4)
-    d.add(Rect(x + 15, y + 12, 50, 16, rx=8, ry=8, fillColor=H("#E8F4F8"), fillOpacity=0.7, strokeColor=H("#8CB8C8"),
-               strokeWidth=0.8))
-    linha(d, x + 22, y + 20, x + 42, y + 22, INK, 1.2)
-    linha(d, x + 38, y + 18, x + 58, y + 20, INK, 1.2)
-    d.add(Rect(x + 20, y - 12, 40, 12, fillColor=H("#D62828"), strokeColor=None))
-    d.add(Rect(x + 40, y - 12, 20, 12, fillColor=H("#1F6FEB"), strokeColor=None))
-    txt(d, x + 40, y - 26, "sem polaridade; ímã a < 1 cm", 6, "Sans-I", MUTED, "middle")
+
+
+# ------------------------------------------------------------------ figuras de montagem por bloco
+def figura_alimentacao():
+    d = Drawing(493, 110)
+    b = bateria9v(d, 30, 30, 104, 50, mais_em_cima=True)
+    txt(d, 82, 92, "Bateria 9 V", 7.4, "Sans-B", NAVY, "middle")
+    xv, yv = pino_esp(d, 380, b["+"][1], "VIN")
+    xg, yg = pino_esp(d, 380, b["-"][1], "GND")
+    fio(d, [b["+"][0], b["+"][1], 380, b["+"][1]], C["v12"], 2.2)
+    fio(d, [b["-"][0], b["-"][1], 380, b["-"][1]], C["gnd"], 2.2)
+    txt(d, 409, 92, "ESP32", 7.4, "Sans-B", NAVY, "middle")
+    txt(d, 200, b["+"][1] + 4, "fio vermelho (+)", 6.2, "Sans-I", C["v12"])
+    txt(d, 200, b["-"][1] + 4, "fio preto (–)", 6.2, "Sans-I", INK)
+    ponto(d, 300, b["+"][1], C["v12"])
+    ponto(d, 320, b["-"][1], C["gnd"])
+    fio(d, [300, b["+"][1], 300, 100], C["v12"], 1.6)
+    etiqueta(d, 304, 100, "+9 V → fechadura (§4.3)", C["v12"])
+    fio(d, [320, b["-"][1], 320, 8], C["gnd"], 1.6)
+    etiqueta(d, 324, 8, "GND → fechadura e buzzer", C["gnd"])
     return d
 
-# ------------------------------------------------------------------ figura: blocos
+
+def figura_fechadura():
+    d = Drawing(493, 200)
+    xs, ys = pino_esp(d, 4, 108, "RX2", "GPIO16")
+    xg, yg = pino_esp(d, 4, 30, "GND")
+    m = to220(d, 200, 128)
+    txt(d, 224, 150, "letras", 5.8, "Sans-I", MUTED)
+    txt(d, 224, 143, "para você", 5.8, "Sans-I", MUTED)
+    fio(d, [xs, ys, m["G"][0], ys, m["G"][0], m["G"][1]], C["lock"], 1.9)
+    ponto(d, 150, ys, C["lock"])
+    resistor_fis(d, 150, ys, 150, 30, "10 kΩ")
+    txt(d, 158, 72, "10 kΩ", 6.6, "Sans-B")
+    txt(d, 158, 64, "(marrom, preto,", 5.6, "Sans-I", MUTED)
+    txt(d, 158, 57, "laranja)", 5.6, "Sans-I", MUTED)
+    fio(d, [xg, 30, 472, 30], C["gnd"], 2.2)
+    txt(d, 70, 34, "GND comum", 6, "Sans-B", C["gnd"])
+    fio(d, [m["S"][0], m["S"][1], m["S"][0], 30], C["gnd"], 1.9)
+    ponto(d, m["S"][0], 30, C["gnd"])
+    cinza = H("#555555")
+    fio(d, [m["D"][0], m["D"][1], m["D"][0], 62, 290, 62], cinza, 1.9)
+    ponte(d, m["S"][0], 62, cinza, C["gnd"])
+    f = fechadura_fis(d, 300, 52)
+    linha(d, 290, 62, f["a"][0], f["a"][1], cinza, 1.9)
+    fio(d, [262, 96, 290, 96, 290, f["b"][1], f["b"][0], f["b"][1]], C["v12"], 1.9)
+    ponto(d, 262, 62, cinza)
+    ponto(d, 262, 96, C["v12"])
+    diodo_fis(d, 262, 62, 262, 96)
+    txt(d, 252, 82, "1N4007", 6.4, "Sans-B", INK, "end")
+    txt(d, 252, 74, "faixa para", 5.6, "Sans-I", MUTED, "end")
+    txt(d, 252, 67, "o lado do +", 5.6, "Sans-I", MUTED, "end")
+    txt(d, 333, 108, "Fechadura (sem polaridade)", 6.4, "Sans-B", INK, "middle")
+    bt = bateria9v(d, 360, 120, 90, 44, mais_em_cima=True)
+    fio(d, [262, 96, 262, 190, 480, 190, 480, bt["+"][1], bt["+"][0], bt["+"][1]], C["v12"], 1.9)
+    fio(d, [bt["-"][0], bt["-"][1], 472, bt["-"][1], 472, 30], C["gnd"], 1.9)
+    txt(d, 405, 170, "Bateria 9 V", 6.6, "Sans-B", NAVY, "middle")
+    txt(d, 370, 194, "+9 V (o mesmo + que vai no VIN)", 6, "Sans-I", C["v12"], "middle")
+    txt(d, 200, 196, "MOSFET IRLZ44N", 6.8, "Sans-B", NAVY, "middle")
+    return d
+
+
+def figura_buzzer():
+    d = Drawing(493, 84)
+    xs, ys = pino_esp(d, 4, 42, "TX2", "GPIO17")
+    xg, yg = pino_esp(d, 4, 14, "GND")
+    bz = buzzer_fis(d, 170, 70, 13)
+    fio(d, [xs, ys, bz["+"][0], ys, bz["+"][0], bz["+"][1]], C["buz"], 1.9)
+    fio(d, [bz["-"][0], bz["-"][1], bz["-"][0], yg, xg, yg], C["gnd"], 1.9)
+    txt(d, 192, 74, "Buzzer ativo", 6.8, "Sans-B")
+    txt(d, 192, 65, "perna longa (+) no TX2", 6, "Sans-I", MUTED)
+    txt(d, 192, 57, "perna curta (–) no GND", 6, "Sans-I", MUTED)
+    return d
+
+
+def figura_componentes():
+    """Como identificar os terminais de cada peça."""
+    d = Drawing(493, 150)
+    to220(d, 50, 70)
+    txt(d, 50, 130, "MOSFET IRLZ44N", 7, "Sans-B", NAVY, "middle")
+    for k, s_ in enumerate(["G = gate (RX2)", "D = dreno (fechadura)", "S = fonte (GND)"]):
+        txt(d, 12, 36 - 9 * k, s_, 6, "Sans", INK)
+    diodo_fis(d, 120, 90, 190, 90)
+    txt(d, 155, 130, "Diodo 1N4007", 7, "Sans-B", NAVY, "middle")
+    txt(d, 155, 72, "faixa prateada = catodo", 6, "Sans", INK, "middle")
+    txt(d, 155, 63, "vai no lado do +9 V", 6, "Sans-I", MUTED, "middle")
+    resistor_fis(d, 220, 90, 290, 90, "10 kΩ")
+    txt(d, 255, 130, "Resistor 10 kΩ", 7, "Sans-B", NAVY, "middle")
+    txt(d, 255, 72, "marrom, preto, laranja", 6, "Sans", INK, "middle")
+    txt(d, 255, 63, "sem polaridade", 6, "Sans-I", MUTED, "middle")
+    buzzer_fis(d, 345, 98, 14)
+    txt(d, 345, 130, "Buzzer", 7, "Sans-B", NAVY, "middle")
+    txt(d, 345, 58, "perna longa / '+' = TX2", 6, "Sans", INK, "middle")
+    bateria9v(d, 395, 74, 72, 36)
+    txt(d, 437, 130, "Bateria 9 V", 7, "Sans-B", NAVY, "middle")
+    txt(d, 437, 58, "clip: vermelho = +", 6, "Sans", INK, "middle")
+    txt(d, 437, 49, "preto = –", 6, "Sans", INK, "middle")
+    return d
+
+
 def figura_blocos():
-    d = Drawing(500, 200)
+    d = Drawing(493, 190)
 
     def bloco(x, y, w, h, t1, t2, cor):
         d.add(Rect(x, y, w, h, rx=5, ry=5, fillColor=H("#FFFFFF"), strokeColor=cor, strokeWidth=1.4))
@@ -1036,41 +871,31 @@ def figura_blocos():
         txt(d, x + w / 2, y + h / 2 - 9, t2, 6.2, "Sans", MUTED, "middle")
 
     def seta(x1, y1, x2, y2, cor=INK, rot=""):
-        linha(d, x1, y1, x2, y2, cor, 1.3)
         import math
+        linha(d, x1, y1, x2, y2, cor, 1.3)
         a = math.atan2(y2 - y1, x2 - x1)
         d.add(Polygon([x2, y2, x2 - 7 * math.cos(a - 0.4), y2 - 7 * math.sin(a - 0.4),
                        x2 - 7 * math.cos(a + 0.4), y2 - 7 * math.sin(a + 0.4)], fillColor=cor, strokeColor=None))
         if rot:
             txt(d, (x1 + x2) / 2, (y1 + y2) / 2 + 4, rot, 5.8, "Sans-I", MUTED, "middle")
 
-    bloco(195, 75, 110, 60, "ESP32 DevKit V1", "controle (FSM)", NAVY)
-    bloco(20, 130, 110, 46, "Teclado 4x4", "8 fios", KP[1])
-    bloco(20, 60, 110, 46, "Divisor 330k/100k", "tensão da bateria", C["bat"])
-    bloco(370, 140, 110, 44, "MOSFET IRLZ44N", "→ fechadura 12 V", C["lock"])
-    bloco(370, 82, 110, 44, "BC547", "→ buzzer 5 V", C["buz"])
-    bloco(370, 24, 110, 44, "LED de status", "desafio / avisos", C["led"])
-    bloco(20, 0, 110, 40, "Bateria 12 V", "3S Li-ion", C["v12"])
-    bloco(195, 0, 110, 40, "Buck LM2596", "12 V → 5 V", C["v5"])
-    bloco(195, 152, 110, 40, "Display 6 dígitos", "TM1637 (a comprar)", C["dio"])
-    seta(250, 135, 250, 152, C["dio"])
-    txt(d, 256, 140, "2 fios", 5.8, "Sans-I", MUTED)
-    seta(130, 153, 195, 120, KP[1], "")
-    seta(130, 83, 195, 95, C["bat"])
-    seta(305, 120, 370, 162, C["lock"], "GPIO16")
-    seta(305, 105, 370, 104, C["buz"], "GPIO17")
-    seta(305, 90, 370, 46, C["led"], "GPIO2")
-    seta(130, 20, 195, 20, C["v12"], "12 V")
-    seta(250, 40, 250, 75, C["v5"], "")
-    txt(d, 256, 55, "5 V (VIN)", 5.8, "Sans-I", MUTED)
-    seta(75, 40, 75, 60, C["v12"])
-    linha(d, 130, 14, 160, 14, C["v12"], 1.1, [3, 2])
-    linha(d, 160, 14, 160, 6, C["v12"], 1.1, [3, 2])
-    linha(d, 160, 6, 330, 6, C["v12"], 1.1, [3, 2])
-    linha(d, 330, 6, 330, 190, C["v12"], 1.1, [3, 2])
-    seta(330, 190, 370, 175, C["v12"])
-    txt(d, 334, 196, "12 V p/ fechadura", 5.8, "Sans-I", MUTED)
+    bloco(190, 70, 110, 60, "ESP32 DevKit V1", "controle", NAVY)
+    bloco(15, 120, 110, 46, "Teclado 4x4", "8 fios", KP[1])
+    bloco(190, 145, 110, 40, "Display 6 dígitos", "TM1637 (a caminho)", C["dio"])
+    bloco(365, 120, 115, 46, "MOSFET + diodo", "→ fechadura", C["lock"])
+    bloco(365, 60, 115, 40, "Buzzer", "direto no pino", C["buz"])
+    bloco(15, 20, 110, 46, "Bateria 9 V", "única alimentação", C["v12"])
+    seta(125, 140, 190, 112, KP[1])
+    seta(245, 130, 245, 145, C["dio"])
+    seta(300, 112, 365, 140, C["lock"], "GPIO16")
+    seta(300, 90, 365, 80, C["buz"], "GPIO17")
+    seta(125, 45, 190, 80, C["v12"], "VIN")
+    linha(d, 125, 30, 488, 30, C["v12"], 1.1, [3, 2])
+    linha(d, 488, 30, 488, 143, C["v12"], 1.1, [3, 2])
+    seta(488, 143, 480, 143, C["v12"])
+    txt(d, 300, 22, "+9 V direto para a fechadura", 5.8, "Sans-I", MUTED, "middle")
     return d
+
 
 # ------------------------------------------------------------------ figura: fluxo de uso
 def figura_fluxo():
@@ -1225,8 +1050,8 @@ def capa(c, doc):
     c.drawString(22 * mm, h - 92 * mm, "Guia de ligação, gravação e operação")
     c.setFillColor(H("#C8D3E3"))
     c.setFont("Sans", 9.5)
-    for k, s in enumerate(["Diagrama completo com a placa · pinagem · esquemáticos",
-                           "montagem passo a passo · software · testes · solução de problemas"]):
+    for k, s in enumerate(["Diagrama completo com a placa · pinagem · desenhos de montagem",
+                           "passo a passo · software · operação · solução de problemas"]):
         c.drawString(22 * mm, h - 101 * mm - 13 * k, s)
     # placa ilustrada na capa
     d = Drawing(200, 430)
@@ -1262,10 +1087,7 @@ def construir():
     doc.addPageTemplates([PageTemplate("capa", [Frame(0, 0, A4[0], A4[1])], onPage=capa),
                           PageTemplate("retrato", [fr], onPage=cabecalho),
                           PageTemplate("paisagem", [fl], onPage=cabecalho, pagesize=L)])
-    E = []
-    E += [NextPageTemplate("retrato"), PageBreak()]
-
-    # ---------------- sumário
+    E = [NextPageTemplate("retrato"), PageBreak()]
     E.append(Paragraph("Sumário", st("tt", fontName="Sans-B", fontSize=19, leading=23, textColor=NAVY,
                                       spaceAfter=12)))
     toc = TableOfContents()
@@ -1276,304 +1098,202 @@ def construir():
     # ---------------- 1 visão geral
     E.append(P("1. Visão geral", "h1"))
     E.append(P("Este guia mostra como montar o hardware do <b>Projeto Talos</b> e gravar o firmware no "
-               "<b>ESP32 DevKit V1</b>. O cofre abre uma fechadura solenoide de 12 V quando alguém digita a senha "
-               "de 6 dígitos no teclado 4x4. Um módulo de display de 6 dígitos (a caminho) mostra o que está "
-               "sendo digitado. Antes da senha, o cofre mostra 2 dígitos aleatórios que precisam ser digitados "
-               "primeiro (desafio anti-marcas). Enquanto o display não chega, eles aparecem como piscadas e bipes. Depois de 5 erros seguidos, o teclado fica bloqueado. Sem uso, o ESP32 entra em "
-               "<i>deep sleep</i> e os displays apagam."))
-    E.append(P("O guia segue a ordem da montagem. Primeiro vem a lista de materiais e a pinagem da placa, "
-               "depois o diagrama completo de ligação. Em seguida há um esquemático para cada bloco, "
-               "a montagem passo a passo com um teste em cada etapa, e por fim o software, a operação e os "
-               "testes de aceitação."))
+               "<b>ESP32 DevKit V1</b>. O cofre abre uma fechadura solenoide quando alguém digita a senha de 6 "
+               "dígitos no teclado 4x4. Antes da senha, o cofre mostra 2 dígitos aleatórios que precisam ser "
+               "digitados primeiro (desafio anti-marcas). Depois de 5 erros seguidos, o teclado fica bloqueado. "
+               "Sem uso, o ESP32 entra em <i>deep sleep</i>."))
+    E.append(P("Tudo é alimentado por <b>uma bateria de 9 V</b>: ela vai direto no pino VIN da placa e na "
+               "fechadura. Não há conversor de tensão. O guia segue a ordem da montagem: pinagem, diagrama "
+               "completo, um desenho para cada bloco, o passo a passo, o software e a operação. Os testes estão "
+               "num documento separado, o <b>Guia de Testes</b>."))
     E.append(figura_blocos())
-    E.append(P("Figura 1 – Blocos do sistema e sinais entre eles.", "cap"))
+    E.append(P("Figura 1 – Blocos do sistema.", "cap"))
     E.append(callout("info", "O firmware usa exatamente os pinos deste guia. Se mudar algum pino, altere também "
-                             "as constantes no topo de <font name='Mono'>src/main.cpp</font> (§7.6)."))
+                             "as constantes no topo de <font name='Mono'>src/main.cpp</font> (§6.6)."))
 
-    # ---------------- 2 materiais
-    E.append(P("2. Lista de materiais", "h1"))
-    E.append(P("Os quatro primeiros itens já foram comprados (pedido da imagem). Os demais são componentes "
-               "baratos e comuns, necessários para ligar a fechadura, o buzzer e a alimentação com segurança."))
-    ok, falta, opc = ('<font color="#2E7D32"><b>comprado</b></font>', '<font color="#C62828"><b>comprar</b></font>',
-                      '<font color="#5F6B7A"><b>opcional</b></font>')
-    E.append(tabela([
-        ["Item", "Qtd.", "Para que serve", "Situação"],
-        ["Case em MDF Cofre Valorem (cód. 08908)", "1", "Caixa do cofre", ok],
-        ["Fechadura solenoide FEC-91 12 V (cód. 09552)", "1", "Trava/destrava a porta", ok],
-        ["Teclado matricial de membrana 4x4 (cód. 05621)", "1", "Entrada da senha", ok],
-        ["Buzzer ativo 5 V BAT5V 12 mm (cód. 06265)", "1", "Feedback sonoro", ok],
-        ["ESP32 DevKit V1 (DOIT, 30 pinos) + cabo micro-USB <b>de dados</b>", "1", "Controlador", falta],
-        ["MOSFET IRLZ44N (ou IRLB8721)", "1", "Chaveia os 12 V do solenoide", falta],
-        ["Diodo 1N4007", "1", "Proteção contra o pico da bobina", falta],
-        ["Transistor BC547 (ou BC337 / 2N2222)", "1", "Chaveia o buzzer", falta],
-        ["Resistores: 100 Ω, 1 kΩ, 2× 10 kΩ, 100 kΩ, 330 kΩ", "6", "Gate, base, pull-downs, divisor", falta],
-        ["Capacitor 100 nF cerâmico", "1", "Estabiliza a leitura da bateria", falta],
-        ["Capacitor eletrolítico 470 µF / 25 V", "1", "Reserva de corrente no acionamento", falta],
-        ["Módulo buck LM2596 (ou MP1584)", "1", "12 V → 5 V para o ESP32 e o buzzer", falta],
-        ["Bateria 12 V: pack 3S 18650 com BMS (ou fonte 12 V / 2 A)", "1", "Alimentação", falta],
-        ["Fusível 2 A + porta-fusível", "1", "Proteção da bateria", opc],
-        ["<b>Módulo display 7 segmentos 6 dígitos TM1637</b> (0,56\", com pontos decimais)", "1",
-         "Mostrar desafio e senha", '<font color="#E07A1F"><b>comprar</b></font>'],
-        ["Protoboard ou placa perfurada, jumpers, bornes KF301", "–", "Interligação", falta],
-        ["LED 5 mm + resistor 220 Ω", "1", "Indicador visível de fora do case", opc],
-        ["Reed switch + ímã + resistor 10 kΩ", "1", "Detecção de porta fechada", opc],
-    ], [205, 30, 170, None]))
-    E.append(Spacer(1, 6))
-    E.append(callout("tip", "<b>Display recomendado:</b> módulo de <b>6 dígitos com TM1637</b>, de 0,56\" e com "
-                            "pontos decimais (procure por “módulo display 6 dígitos TM1637”, padrão RobotDyn). Ele "
-                            "usa só <b>2 fios</b> de sinal, multiplexa sozinho e funciona em 3,3 V, então liga direto "
-                            "no ESP32 sem nenhum outro componente. Evite os de 4 dígitos com dois-pontos (relógio) e "
-                            "o MAX7219 de 8 dígitos, que pede 5 V e nível lógico acima do que o ESP32 garante.",
-                     "O QUE COMPRAR"))
-    E.append(callout("warn", "O solenoide é de <b>12 V</b> e puxa por volta de 0,5 a 1 A (confira na etiqueta). "
-                             "Uma bateria de 3,7 V, como na monografia, não aciona essa fechadura. Por isso o "
-                             "sistema roda em 12 V, e o ESP32 recebe 5 V por um conversor buck."))
-
-    # ---------------- 3 pinagem
+    # ---------------- 2 pinagem
     E.append(PageBreak())
-    E.append(P("3. Pinagem do ESP32 DevKit V1", "h1"))
+    E.append(P("2. Pinagem do ESP32 DevKit V1", "h1"))
     E.append(P("A placa tem 15 pinos de cada lado. Os nomes da figura são os mesmos impressos na placa "
                "(<i>silkscreen</i>). Atenção a dois nomes que confundem: <b>RX2 é o GPIO16</b> e "
                "<b>TX2 é o GPIO17</b>. Os pinos coloridos são usados pelo projeto e os cinzas ficam livres."))
     E.append(figura_pinagem())
     E.append(P("Figura 2 – Pinos usados (vista de cima, antena para cima, USB para baixo).", "cap"))
-    E.append(callout("danger", "O <b>D12</b> define a tensão da flash no boot: se estiver em HIGH quando a placa "
-                               "reinicia, ela não inicia, a menos que o eFuse de 3,3 V esteja gravado (§5.2). Aqui ele "
-                               "recebe <b>só o fio do teclado</b>. Não ligue mais nada nele. Os pinos D2, D15, D0 (BOOT) e "
-                               "D5 também são de boot; o D2 é usado só como saída para o LED, o que é seguro."))
+    E.append(callout("danger", "O <b>D12</b> define a tensão da flash no boot. Na placa do grupo isso foi fixado "
+                               "por eFuse (§4.2), e o D12 recebe <b>só o fio do teclado</b>. Não ligue mais nada nele. "
+                               "Os pinos D2, D15, D0 (BOOT) e D5 também são de boot; o D2 é usado só como saída "
+                               "para o LED, o que é seguro."))
     E.append(PageBreak())
-    E.append(P("3.1 Tabela mestre de ligações", "h2"))
+    E.append(P("2.1 Tabela de ligações", "h2"))
     sw = lambda c: swatch(c)
     E.append(tabela([
         ["Cor", "Pino na placa", "GPIO", "Liga em", "Detalhe"],
-        [sw(KP[0]), "D32", "32", "Teclado, fio 1 (L1)", "§5.2"],
-        [sw(KP[1]), "D33", "33", "Teclado, fio 2 (L2)", "§5.2"],
-        [sw(KP[2]), "D25", "25", "Teclado, fio 3 (L3)", "§5.2"],
-        [sw(KP[3]), "D26", "26", "Teclado, fio 4 (L4)", "§5.2"],
-        [sw(KP[4]), "D27", "27", "Teclado, fio 5 (C1)", "§5.2"],
-        [sw(KP[5]), "D14", "14", "Teclado, fio 6 (C2)", "§5.2"],
-        [sw(KP[6]), "D12", "12", "Teclado, fio 7 (C3), e nada mais neste pino", "§5.2"],
-        [sw(KP[7]), "D13", "13", "Teclado, fio 8 (C4)", "§5.2"],
-        [sw(C["dio"]), "D18", "18", "DIO do módulo display TM1637 (quando chegar)", "§5.5"],
-        [sw(C["clk"]), "D19", "19", "CLK do módulo display TM1637 (quando chegar)", "§5.5"],
-        [sw(C["lock"]), "RX2", "16", "Resistor 100 Ω → gate do IRLZ44N", "§5.3"],
-        [sw(C["buz"]), "TX2", "17", "Resistor 1 kΩ → base do BC547", "§5.4"],
-        [sw(C["led"]), "D2", "2", "LED azul da placa (+ LED externo opcional)", "§5.6"],
-        [sw(C["bat"]), "VP", "36", "Meio do divisor 330 kΩ / 100 kΩ", "§5.6"],
-        [sw(C["door"]), "VN", "39", "Reed switch (opcional)", "§5.6"],
-        [sw(C["v5"]), "VIN", "–", "OUT+ do buck (5,0 V)", "§5.1"],
-        [sw(C["gnd"]), "GND", "–", "GND comum (bateria, buck, MOSFET, BC547)", "§5.1"],
-        [sw(C["v33"]), "3V3", "–", "VCC do display TM1637 e pull-up do reed switch (opcional)", "§5.5/5.6"],
-    ], [34, 68, 38, 230, None], destaque_col0=False))
+        [sw(KP[0]), "D32", "32", "Teclado, fio 1", "§4.2"],
+        [sw(KP[1]), "D33", "33", "Teclado, fio 2", "§4.2"],
+        [sw(KP[2]), "D25", "25", "Teclado, fio 3", "§4.2"],
+        [sw(KP[3]), "D26", "26", "Teclado, fio 4", "§4.2"],
+        [sw(KP[4]), "D27", "27", "Teclado, fio 5", "§4.2"],
+        [sw(KP[5]), "D14", "14", "Teclado, fio 6", "§4.2"],
+        [sw(KP[6]), "D12", "12", "Teclado, fio 7, e nada mais neste pino", "§4.2"],
+        [sw(KP[7]), "D13", "13", "Teclado, fio 8", "§4.2"],
+        [sw(C["lock"]), "RX2", "16", "Perna G do MOSFET (fechadura)", "§4.3"],
+        [sw(C["buz"]), "TX2", "17", "Perna + do buzzer", "§4.4"],
+        [sw(C["dio"]), "D18", "18", "DIO do display TM1637 (quando chegar)", "§4.5"],
+        [sw(C["clk"]), "D19", "19", "CLK do display TM1637 (quando chegar)", "§4.5"],
+        [sw(C["led"]), "D2", "2", "LED azul da placa (já vem ligado)", "§4.6"],
+        [sw(C["bat"]), "VP", "36", "Divisor de tensão da bateria (opcional)", "§4.6"],
+        [sw(C["door"]), "VN", "39", "Sensor de porta (opcional)", "§4.6"],
+        [sw(C["v12"]), "VIN", "–", "+ da bateria 9 V (fio vermelho)", "§4.1"],
+        [sw(C["gnd"]), "GND", "–", "– da bateria, perna S do MOSFET, – do buzzer", "§4.1"],
+        [sw(C["v33"]), "3V3", "–", "VCC do display TM1637 (quando chegar)", "§4.5"],
+    ], [34, 68, 38, 230, None]))
 
-    # ---------------- 4 diagrama completo (paisagem)
+    # ---------------- 3 diagrama completo (paisagem)
     E += [NextPageTemplate("paisagem"), PageBreak()]
-    E.append(Paragraph("4. Diagrama completo de ligação", st("h1l", parent=S["h1"], fontSize=15, leading=18,
+    E.append(Paragraph("3. Diagrama completo de ligação", st("h1l", parent=S["h1"], fontSize=15, leading=18,
                                                               spaceAfter=4)))
     E.append(diagrama_completo())
     E += [NextPageTemplate("retrato"), PageBreak()]
-    E.append(P("4.1 Como ler o diagrama", "h2"))
+    E.append(P("3.1 Como ler o diagrama", "h2"))
     E += bullets([
-        "Cada cor de fio tem um significado (veja a legenda no diagrama). Os fios do teclado usam azuis para as "
-        "linhas e verdes para as colunas.",
-        "Os símbolos <b>+12 V</b>, <b>+5 V</b> e <b>3V3</b> indicam ligação à respectiva alimentação. Todo símbolo "
-        "de terra (três traços) é o <b>mesmo GND</b>. Na prática, tudo vai para uma única barra de GND na "
-        "protoboard.",
+        "Cada cor de fio tem um significado (veja a legenda). Vermelho é +9 V e preto é GND. Os fios do teclado "
+        "usam azuis para as linhas e verdes para as colunas.",
+        "Todo símbolo de terra (três traços) e toda etiqueta “GND” são o <b>mesmo GND</b>. Na protoboard, use "
+        "uma única barra de GND para tudo.",
         "Os 8 fios do teclado vão em sequência nos pinos <b>D32 a D13</b>, sem resistores.",
-        "O cabo flat aparece dobrado só para manter a ordem dos fios no desenho. Na montagem, basta seguir "
-        "a numeração dos fios (1 a 8, da esquerda para a direita com o teclado de frente).",
-        "O buzzer aparece ligado por etiquetas, e o esquema completo está no §5.4. O módulo de display, "
-        "contornado em laranja tracejado, ainda não chegou: seus fios só serão ligados depois.",
-        "Elementos tracejados são opcionais.",
+        "A fechadura aparece como um bloco; o desenho de montagem dela está no §4.3.",
+        "O módulo de display, contornado em laranja tracejado, ainda não chegou: seus fios só serão ligados "
+        "depois. Elementos tracejados são opcionais.",
     ])
-    E.append(callout("danger", "Antes de energizar: (1) todos os GND interligados; (2) buck ajustado em 5,0 V; "
-                               "(3) no D12, só o fio 7 do teclado; (4) resistores de 10 kΩ no gate do MOSFET e na base do BC547 "
-                               "(mantêm a fechadura e o buzzer desligados no boot e no deep sleep); (5) VCC do display no <b>3V3</b>.",
-                     "CHECKLIST ANTES DE LIGAR"))
+    E.append(callout("danger", "Antes de ligar a bateria: (1) todos os GND interligados; (2) o + da bateria no "
+                               "<b>VIN</b>, nunca no 3V3; (3) resistor de 10 kΩ no gate do MOSFET (sem ele a "
+                               "fechadura pode abrir sozinha); (4) diodo com a faixa no lado do +9 V; (5) no D12, só "
+                               "o fio do teclado.", "CHECKLIST ANTES DE LIGAR"))
 
-    # ---------------- 5 blocos
-    E.append(P("5. Ligações por bloco", "h1"))
-    E.append(P("5.1 Alimentação", "h2"))
-    E.append(P("A bateria de 12 V alimenta diretamente a fechadura. Um conversor buck baixa a tensão para "
-               "5 V, que alimenta o pino <b>VIN</b> do ESP32 (o regulador da placa gera os 3,3 V) e o buzzer. O "
-               "capacitor de 470 µF perto do MOSFET segura a tensão no instante em que o solenoide liga, o que "
-               "evita o reset do ESP32 por queda de tensão (<i>brownout</i>)."))
-    E.append(esq_alimentacao())
-    E.append(P("Figura 3 – Distribuição de energia. O GND é um só para todo o circuito.", "cap"))
-    E.append(callout("danger", "<b>Ajuste o buck antes de ligar o ESP32.</b> Ligue só a bateria no IN+/IN–, meça "
-                               "o OUT+/OUT– com o multímetro e gire o trimpot até ler <b>5,0 V</b>. Esses módulos "
-                               "costumam vir de fábrica com a saída perto da entrada (12 V), e 12 V no VIN queima "
-                               "a placa."))
-    E.append(callout("warn", "Não alimente pelo VIN e pelo USB ao mesmo tempo, a não ser que sua placa tenha o "
-                             "diodo de proteção no VIN (nem todo clone tem). Para gravar o firmware, desligue "
-                             "o 12 V ou use só o USB. Sem 12 V, o teclado e o buzzer funcionam, mas a fechadura "
-                             "não aciona."))
+    # ---------------- 4 montagem por bloco
+    E.append(P("4. Montagem por bloco", "h1"))
+    E.append(P("4.1 Alimentação (bateria 9 V)", "h2"))
+    E.append(P("A bateria vai <b>direto</b> na placa: o fio vermelho (+) no <b>VIN</b> e o preto (–) no "
+               "<b>GND</b>. O regulador da própria placa gera os 3,3 V do ESP32. O mesmo + da bateria também vai "
+               "na fechadura (§4.3)."))
+    E.append(figura_alimentacao())
+    E.append(P("Figura 3 – Bateria 9 V na placa.", "cap"))
+    E.append(callout("warn", "Quando a placa estiver no USB para gravar ou ver o serial, <b>desconecte a "
+                             "bateria</b>. Alguns clones da DevKit não têm proteção entre o VIN e o USB. Sem a "
+                             "bateria, o teclado e o buzzer funcionam pelo USB, mas a fechadura não aciona."))
 
     E.append(CondPageBreak(120 * mm))
-    E.append(P("5.2 Teclado 4x4", "h2"))
-    E.append(P("O teclado tem 8 fios: 4 linhas (L1 a L4) e 4 colunas (C1 a C4). Cada tecla, quando apertada, "
-               "liga uma linha a uma coluna. O firmware energiza uma coluna por vez e lê as linhas para "
-               "descobrir a tecla. Com o teclado de <b>frente</b> e o cabo para baixo, o fio 1 é o da esquerda."))
+    E.append(P("4.2 Teclado 4x4", "h2"))
+    E.append(P("O teclado tem 8 fios. Cada tecla, quando apertada, encosta um fio de linha num fio de coluna, e o "
+               "firmware descobre qual foi. Ligue os 8 fios <b>em sequência</b> nos pinos <b>D32, D33, D25, D26, "
+               "D27, D14, D12 e D13</b>, que são vizinhos no lado esquerdo da placa. Não precisa de resistores."))
     E.append(figura_teclado())
-    E.append(P("Figura 4 – Teclado de frente, numeração dos fios e matriz interna. As teclas * e # e a coluna "
-               "A–D têm função especial.", "cap"))
-    E.append(tabela([
-        ["Fio", "Função", "Pino na placa", "GPIO", "Cor sugerida"],
-        ["1", "Linha L1 (1 2 3 A)", "D32", "32", swatch(KP[0])],
-        ["2", "Linha L2 (4 5 6 B)", "D33", "33", swatch(KP[1])],
-        ["3", "Linha L3 (7 8 9 C)", "D25", "25", swatch(KP[2])],
-        ["4", "Linha L4 (* 0 # D)", "D26", "26", swatch(KP[3])],
-        ["5", "Coluna C1 (1 4 7 *)", "D27", "27", swatch(KP[4])],
-        ["6", "Coluna C2 (2 5 8 0)", "D14", "14", swatch(KP[5])],
-        ["7", "Coluna C3 (3 6 9 #)", "D12", "12", swatch(KP[6])],
-        ["8", "Coluna C4 (A B C D)", "D13", "13", swatch(KP[7])],
-    ], [30, 120, 120, 50, None], destaque_col0=True))
-    E.append(Spacer(1, 6))
-    E.append(callout("tip", "<b>Confirme a numeração com o multímetro</b> (modo continuidade). Aperte e segure "
-                            "a tecla <b>1</b>: deve apitar entre os fios <b>1 e 5</b>. Tecla <b>D</b>: fios "
-                            "<b>4 e 8</b>. Tecla <b>0</b>: fios <b>4 e 6</b>. Se der o contrário, sua contagem "
-                            "começou do lado errado.", "TESTE DE 1 MINUTO"))
-    E.append(P("Os 8 fios caem em <b>pinos vizinhos e em ordem</b> no lado esquerdo da placa, do D32 ao D13, então "
-               "dá para usar um pente de 8 jumpers lado a lado. Não precisa de resistores: o firmware usa os "
-               "pull-downs internos do ESP32."))
+    E.append(P("Figura 4 – Teclado de frente e como as teclas se ligam por dentro.", "cap"))
     E.append(callout("warn", "<b>Teclas espelhadas?</b> Se você aperta 2 e o cofre lê C (ou aperta 4 e lê #), a "
-                             "ordem dos fios ficou invertida: o fio que está no D32 é o 8 do teclado. Isso depende do "
-                             "teclado e de como o conector foi contado. Resolva no firmware com "
-                             "<font name='Mono'>TECLADO_INVERTIDO</font>: <font name='Mono'>true</font> para os fios na "
-                             "ordem 8…1 (como ficou o teclado do grupo, e é o padrão), <font name='Mono'>false</font> "
-                             "para a ordem 1…8 do guia.", "TECLADO INVERTIDO"))
-    E.append(callout("info", "<b>Para todas as teclas acordarem o cofre</b>, a placa precisa do eFuse que fixa a "
-                             "flash em 3,3 V (já gravado na placa do grupo). Sem ele, o D12 é um pino de boot e precisa "
-                             "ficar em LOW no deep sleep, então as teclas ligadas a ele não acordam (4, 5, 6 e B com "
-                             "<font name='Mono'>TECLADO_INVERTIDO = true</font>). O firmware detecta o eFuse sozinho e "
-                             "mostra no serial: <font name='Mono'>D12 livre</font> ou <font name='Mono'>D12 strapping</font>. "
-                             "Para gravar numa placa nova com módulo <b>WROOM-32</b> (flash de 3,3 V): "
-                             "<font name='Mono'>espefuse.py --port /dev/ttyUSB0 set_flash_voltage 3.3V</font>. "
-                             "<b>É irreversível</b>: nunca use 1.8V nem faça isso em módulos com flash de 1,8 V.",
+                             "ordem dos fios ficou invertida em relação ao teclado. Não precisa mexer nos fios: mude "
+                             "<font name='Mono'>TECLADO_INVERTIDO</font> no firmware. O padrão é "
+                             "<font name='Mono'>true</font>, que é como ficou o teclado do grupo.", "TECLADO INVERTIDO"))
+    E.append(callout("info", "<b>Todas as teclas acordam o cofre</b> porque a placa do grupo tem o eFuse que fixa a "
+                             "flash em 3,3 V. Sem ele, o D12 seria um pino de boot e precisaria ficar em LOW no "
+                             "deep sleep, e as teclas ligadas a ele (4, 5, 6 e B) não acordariam. O firmware detecta "
+                             "o eFuse sozinho e mostra no serial: <font name='Mono'>D12 livre</font> ou "
+                             "<font name='Mono'>D12 strapping</font>. Para gravar numa placa nova com módulo "
+                             "<b>WROOM-32</b> (flash de 3,3 V): <font name='Mono'>espefuse.py --port /dev/ttyUSB0 "
+                             "set_flash_voltage 3.3V</font>. <b>É irreversível</b>: nunca use 1.8V.",
                      "SOBRE O D12 E O EFUSE"))
 
     E.append(CondPageBreak(110 * mm))
-    E.append(P("5.3 Fechadura solenoide (MOSFET)", "h2"))
-    E.append(P("O GPIO16 (RX2) liga o MOSFET, que fecha o caminho do solenoide para o GND. Com o GPIO em HIGH, "
-               "o solenoide energiza e a lingueta recolhe (destravado). O firmware mantém o solenoide ligado "
-               "por 5 s e depois o desliga."))
-    E.append(esq_tranca())
-    E.append(P("Figura 5 – Driver da fechadura (chaveamento no lado do GND).", "cap"))
-    E += bullets([
-        "Fio do solenoide <b>sem polaridade</b>: um vai no +12 V e o outro no <b>D</b>reno do MOSFET.",
-        "O diodo fica em paralelo com o solenoide, com a <b>faixa (catodo) no +12 V</b>. Invertido, ele causa um "
-        "curto quando o MOSFET liga.",
-        "O resistor de 10 kΩ do gate ao GND é <b>obrigatório</b>. No deep sleep, o GPIO16 fica solto e, sem esse "
-        "resistor, a fechadura pode abrir sozinha.",
-        "O IRLZ44N conduz bem com 3,3 V no gate para correntes de até ~1 A. Se esquentar, use o IRLB8721, que "
-        "é melhor em 3,3 V.",
-    ])
-
-    E.append(CondPageBreak(95 * mm))
-    E.append(P("5.4 Buzzer", "h2"))
-    E.append(esq_buzzer())
-    E.append(P("Figura 6 – Driver do buzzer ativo de 5 V.", "cap"))
-    E.append(P("O buzzer é <b>ativo</b>: basta energizar para ele apitar, sempre no mesmo tom. Por isso os "
-               "avisos do cofre se diferenciam pelo número e pela duração dos bipes, não pela melodia (§8.4)."))
-
-    E.append(PageBreak())
-    E.append(P("5.5 Display de 6 dígitos (TM1637)", "h2"))
-    E.append(P("O módulo de display ainda não chegou. O firmware já tem o driver, mas ele fica desligado com "
-               "<font name='Mono'>TEM_DISPLAY = false</font>. Até lá, o desafio aparece em piscadas do LED e bipes "
-               "(§8.2) e também no monitor serial. Quando o módulo chegar, são só 4 fios:"))
-    E.append(figura_tm1637())
-    E.append(P("Figura 7 – Ligação do módulo TM1637. A ordem dos pinos no módulo pode variar: siga os nomes "
-               "impressos nele.", "cap"))
+    E.append(P("4.3 Fechadura", "h2"))
+    E.append(P("O pino do ESP32 não aguenta a corrente da fechadura, então quem a liga é um <b>MOSFET</b>, que "
+               "funciona como uma chave. Quando o RX2 vai para HIGH, o MOSFET fecha o caminho entre a fechadura "
+               "e o GND, e a lingueta recolhe por 5 s. São só 3 peças além da fechadura:"))
+    E.append(figura_fechadura())
+    E.append(P("Figura 5 – Montagem da fechadura. O fio cinza passa por cima do preto sem encostar.", "cap"))
     E.append(tabela([
-        ["Pino do módulo", "Liga em", "Observação"],
-        ["VCC", "3V3 do ESP32", "<b>Não use 5 V.</b> Os pull-ups do módulo vão ao VCC e jogariam 5 V nos GPIOs"],
-        ["GND", "GND comum", ""],
-        ["DIO", "D18 (GPIO18)", "dados"],
-        ["CLK", "D19 (GPIO19)", "clock"],
-    ], [90, 110, None], destaque_col0=True))
+        ["Peça", "Onde liga"],
+        ["MOSFET, perna <b>G</b> (esquerda)", "RX2 da placa"],
+        ["MOSFET, perna <b>D</b> (meio)", "um fio da fechadura"],
+        ["MOSFET, perna <b>S</b> (direita)", "GND"],
+        ["Resistor 10 kΩ", "entre a perna G e o GND (mantém a fechadura fechada no boot e no sono)"],
+        ["Fechadura, outro fio", "+ da bateria 9 V"],
+        ["Diodo 1N4007", "entre os 2 fios da fechadura, com a <b>faixa no lado do +</b> (protege o MOSFET)"],
+    ], [150, None], destaque_col0=True))
     E.append(Spacer(1, 6))
-    E.append(P("<b>Para ativar:</b>", "body"))
+    E.append(callout("tip", "As pernas do MOSFET são lidas com as <b>letras (a face com o nome) para você</b> e as "
+                            "pernas para baixo: <b>G, D, S</b> da esquerda para a direita. A fechadura não tem "
+                            "polaridade, mas o diodo tem."))
+
+    E.append(CondPageBreak(60 * mm))
+    E.append(P("4.4 Buzzer", "h2"))
+    E.append(figura_buzzer())
+    E.append(P("Figura 6 – Buzzer ligado direto na placa.", "cap"))
+    E.append(P("São 2 fios: a perna longa (+) no <b>TX2</b> e a curta (–) no <b>GND</b>. O buzzer é de 5 V e aqui "
+               "recebe 3,3 V, então apita mais baixo. Ele é <b>ativo</b>: sempre o mesmo tom, por isso os avisos se "
+               "diferenciam pelo número e pela duração dos bipes (§7.4)."))
+
+    E.append(CondPageBreak(110 * mm))
+    E.append(P("4.5 Display de 6 dígitos (quando chegar)", "h2"))
+    E.append(P("O firmware já tem o driver do módulo TM1637, mas ele fica desligado com "
+               "<font name='Mono'>TEM_DISPLAY = false</font>. Até lá, o desafio aparece em piscadas do LED e bipes "
+               "(§7.2) e no monitor serial. Quando o módulo chegar, são 4 fios:"))
+    E.append(figura_tm1637())
+    E.append(P("Figura 7 – Ligação do módulo TM1637. Siga os nomes impressos no módulo.", "cap"))
     E += numerados([
-        "Ligue os 4 fios com a placa desconectada.",
+        "Ligue <b>VCC no 3V3</b> (nunca no VIN), GND no GND, DIO no D18 e CLK no D19.",
         "Em <font name='Mono'>src/main.cpp</font>, troque <font name='Mono'>TEM_DISPLAY = false</font> por "
-        "<font name='Mono'>true</font> e grave (<font name='Mono'>pio run -t upload</font>).",
-        "Ao ligar, o desafio aparece no meio do display, por exemplo <font name='Mono'>  47  </font>.",
-        "Se os dígitos saírem embaralhados (por exemplo, a ordem 3 2 1 6 5 4), ajuste o vetor "
-        "<font name='Mono'>POS_TM</font> logo abaixo dos pinos. Para o brilho, use "
+        "<font name='Mono'>true</font> e grave.",
+        "Se os dígitos saírem embaralhados, ajuste o vetor <font name='Mono'>POS_TM</font>. Brilho: "
         "<font name='Mono'>BRILHO_DISPLAY</font> (0 a 7).",
     ])
-    E.append(callout("danger", "Alimente o módulo pelo <b>3V3</b> da placa, nunca pelo 5 V. Os GPIOs do ESP32 não "
-                               "aguentam 5 V, e as linhas DIO e CLK do módulo são puxadas para a tensão do VCC."))
 
     E.append(CondPageBreak(95 * mm))
-    E.append(P("5.6 Bateria, LED e sensor de porta", "h2"))
+    E.append(P("4.6 Opcionais: leitura da bateria, LED externo e sensor de porta", "h2"))
     E.append(esq_sensores())
-    E.append(P("Figura 8 – Divisor de tensão, LED externo e sensor de porta.", "cap"))
+    E.append(P("Figura 8 – Opcionais.", "cap"))
     E += bullets([
-        "<b>Divisor:</b> com 330 kΩ / 100 kΩ, 12,6 V (bateria cheia) viram 2,93 V no pino, dentro da faixa do "
-        "ADC. O firmware avisa abaixo de <b>10,5 V</b>. Os resistores reais variam, então meça a bateria com o "
-        "multímetro e ajuste <font name='Mono'>BAT_DIV</font> se a leitura no serial não bater (§7.6).",
-        "<b>LED:</b> o LED azul da placa (D2) pisca junto com os bipes, o que ajuda no modo stealth. Para ver de "
-        "fora, ligue um LED com 220 Ω no D2 e fure o case.",
-        "<b>Reed switch:</b> não foi comprado. Sem ele, a fechadura trava sozinha após 5 s. Se instalar, mude "
-        "<font name='Mono'>TEM_SENSOR_PORTA</font> para <font name='Mono'>true</font> e o cofre trava assim que "
-        "a porta abrir e fechar de novo. Ele vai no VN (GPIO39), que não tem pull-up interno, por isso o resistor externo de 10 kΩ.",
+        "<b>Leitura da bateria:</b> dois resistores (330 kΩ e 100 kΩ) fazem o cofre avisar quando a bateria fica "
+        "abaixo de <b>7 V</b>. Sem eles, o aviso de bateria fraca fica desligado (ou acusa errado, porque o pino "
+        "fica solto; nesse caso, ligue o VP no GND).",
+        "<b>LED externo:</b> o LED azul da placa (D2) já pisca junto com os bipes. Para vê-lo de fora do case, "
+        "ligue um LED com 220 Ω no D2.",
+        "<b>Sensor de porta:</b> não foi comprado. Sem ele, a fechadura trava sozinha após 5 s.",
     ])
 
-    E.append(CondPageBreak(120 * mm))
-    E.append(P("5.7 Identificando os terminais", "h2"))
+    E.append(CondPageBreak(70 * mm))
+    E.append(P("4.7 Identificando as peças", "h2"))
     E.append(figura_componentes())
-    E.append(P("Figura 9 – Terminais dos componentes (vista de frente, pernas para baixo). "
-               "", "cap"))
+    E.append(P("Figura 9 – Como reconhecer os terminais de cada peça.", "cap"))
 
-    # ---------------- 6 montagem
+    # ---------------- 5 passo a passo
     E.append(PageBreak())
-    E.append(P("6. Montagem passo a passo", "h1"))
-    E.append(P("Monte e teste um bloco por vez. Assim, se algo falhar, você sabe exatamente onde procurar. "
-               "Faça tudo com a bateria <b>desconectada</b> e só ligue na hora do teste."))
+    E.append(P("5. Montagem passo a passo", "h1"))
+    E.append(P("Monte e teste um bloco por vez. Faça tudo com a bateria <b>desconectada</b>."))
     passos = [
-        ("Buck", "Ligue a bateria no IN+/IN– do buck (com o fusível, se tiver). Ajuste o trimpot até "
-                 "<b>5,0 V</b> no OUT+/OUT–. Desligue."),
-        ("Barramentos", "Na protoboard, crie uma barra de <b>+12 V</b>, uma de <b>+5 V</b> (OUT+ do buck) e uma "
-                        "de <b>GND</b>. O OUT– do buck, o negativo da bateria e o IN– ficam todos nessa barra de GND."),
-        ("ESP32", "Encaixe a placa no meio da protoboard. Ligue o VIN na barra de +5 V e o GND na barra de GND. "
-                  "Teste: ligue a bateria, e o LED vermelho (PWR) deve acender."),
-        ("Firmware", "Desligue a bateria, conecte o USB e grave o firmware (§7). No monitor serial deve aparecer "
+        ("Firmware", "Conecte só o USB e grave o firmware (§6). No monitor serial deve aparecer "
                      "<font name='Mono'>Talos: boot</font> e um desafio."),
-        ("Display (quando chegar)", "Ligue VCC no 3V3, GND, DIO no D18 e CLK no D19 (§5.5). Mude "
-                                    "<font name='Mono'>TEM_DISPLAY</font> para true e grave. Teste: o desafio aparece "
-                                    "no display."),
-        ("Teclado", "Faça o teste de continuidade (§5.2) e ligue os 8 fios em sequência (D32 a D13). Teste: aperte uma tecla, a placa "
-                    "acorda e o serial mostra um novo desafio. Digite os 2 dígitos e veja a mensagem "
-                    "<font name='Mono'>S3: digite a senha</font>."),
-        ("Buzzer", "Monte o BC547, os resistores de 1 kΩ e 10 kΩ e o buzzer (§5.4). Teste: cada tecla dá um "
-                   "bipe curto."),
-        ("Fechadura", "Monte o MOSFET, os resistores de 100 Ω e 10 kΩ, o diodo e o capacitor de 470 µF (§5.3). "
-                      "Ligue os fios do solenoide. Teste com bateria e <b>sem</b> USB: senha "
-                      "<font name='Mono'>000000</font> + <b>#</b> deve recolher a lingueta por 5 s."),
-        ("Bateria e opcionais", "Monte o divisor com o capacitor de 100 nF. Se for o caso, monte também o LED "
-                                "externo e o reed switch (§5.6)."),
-        ("Case", "Fixe o teclado na tampa e a fechadura alinhada com o batente. Deixe a bateria acessível pelo "
-                 "lado de fora (RF-10), sem expor a eletrônica (RNF-07). Rode os testes do §9."),
+        ("Teclado", "Ligue os 8 fios em sequência (D32 a D13). Aperte uma tecla: o serial mostra um desafio. "
+                    "Digite os 2 dígitos e veja <font name='Mono'>S3: digite a senha</font>."),
+        ("Buzzer", "Perna longa no TX2, curta no GND. Cada tecla deve dar um bipe."),
+        ("Fechadura", "Monte o MOSFET, o resistor de 10 kΩ e o diodo (§4.3). Antes da fechadura, dá para testar "
+                      "com um LED + resistor no lugar dela."),
+        ("Bateria", "Desconecte o USB. Ligue a bateria: + no VIN e na fechadura, – no GND. O LED vermelho da "
+                    "placa acende. Senha <font name='Mono'>000000</font> + <b>#</b> deve recolher a lingueta por 5 s."),
+        ("Case", "Fixe o teclado na tampa e a fechadura alinhada com o batente. Deixe a bateria acessível por "
+                 "fora (RF-10). Rode o Guia de Testes."),
     ]
     linhas = [["#", "Etapa", "O que fazer e como testar", "OK"]]
-    for k, (a, b) in enumerate(passos, 1):
-        linhas.append([str(k), a, b, "☐"])
+    for k, (a_, b_) in enumerate(passos, 1):
+        linhas.append([str(k), a_, b_, "☐"])
     t = tabela(linhas, [20, 72, None, 26], destaque_col0=True)
-    t.setStyle(TableStyle([("FONTNAME", (3, 1), (3, -1), "Sym"), ("FONTSIZE", (3, 1), (3, -1), 12),
-                           ("ALIGN", (3, 0), (3, -1), "CENTER")]))
+    t.setStyle(TableStyle([("ALIGN", (3, 0), (3, -1), "CENTER")]))
     E.append(t)
-    E.append(Spacer(1, 8))
-    E.append(callout("tip", "Corte os fios no tamanho certo e mantenha os de 12 V (fechadura) longe dos fios do "
-                            "teclado. Prenda os jumpers no case com fita ou abraçadeira, porque a vibração da "
-                            "fechadura solta contatos de protoboard com o tempo."))
 
-    # ---------------- 7 software
+    # ---------------- 6 software
     E.append(PageBreak())
-    E.append(P("7. Software: compilar e gravar", "h1"))
+    E.append(P("6. Software: compilar e gravar", "h1"))
     E.append(P("O projeto usa o <b>PlatformIO</b>, que baixa sozinho o compilador e as bibliotecas do ESP32 na "
-               "primeira compilação (alguns minutos, ~1 GB). Depois disso, gravar leva um comando só."))
-    E.append(P("7.1 Opção A: terminal (Linux ou WSL)", "h2"))
+               "primeira compilação (alguns minutos). Depois disso, gravar leva um comando."))
+    E.append(P("6.1 Opção A: terminal (Linux ou WSL)", "h2"))
     E.append(code("""
 sudo apt update && sudo apt install -y pipx git
 pipx ensurepath                 # depois feche e abra o terminal
@@ -1582,211 +1302,141 @@ git clone https://github.com/AndreMorenoGoveia/talos-project-embedded.git
 cd talos-project-embedded
 pio run -t upload -t monitor    # compila, grava e abre o serial
 """))
-    E.append(P("Para sair do monitor serial, use <b>Ctrl+C</b>. No Linux, se aparecer <i>Permission denied</i> "
-               "na porta, rode o comando abaixo uma vez e faça logout/login:"))
-    E.append(code("sudo usermod -aG dialout $USER"))
-    E.append(P("7.2 Opção B: VS Code (Windows, Linux ou macOS)", "h2"))
+    E.append(P("Para sair do monitor serial, use <b>Ctrl+C</b>."))
+    E.append(P("6.2 Opção B: VS Code (Windows, Linux ou macOS)", "h2"))
     E += numerados([
-        "Instale o VS Code e, na aba de extensões, a extensão <b>PlatformIO IDE</b>.",
-        "No Windows, instale o driver da ponte USB da placa: <b>CP210x</b> (Silicon Labs) ou <b>CH340</b>, "
-        "conforme o chip da sua placa (o nome aparece no Gerenciador de Dispositivos).",
-        "Abra a pasta do projeto (<i>File " + ARW + " Open Folder</i>).",
-        "Na barra azul inferior, clique em <b>" + '<font name="Sym">✓</font>' + "</b> (Build), depois em <b>"
-        + ARW + "</b> (Upload) e por fim no ícone de tomada (Serial Monitor).",
+        "Instale o VS Code e a extensão <b>PlatformIO IDE</b>.",
+        "No Windows, instale o driver da ponte USB da placa: <b>CP210x</b> ou <b>CH340</b>.",
+        "Abra a pasta do projeto e use os botões da barra azul inferior: Build, Upload e Serial Monitor.",
     ])
-    E.append(P("7.3 Usando o WSL? Passe o USB para o Linux", "h2"))
-    E.append(P("O WSL não enxerga portas USB sozinho. Instale o <b>usbipd-win</b> uma vez e repita o "
-               "<i>attach</i> sempre que reconectar a placa. No PowerShell <b>como administrador</b>:"))
+    E.append(P("6.3 Usando o WSL? Passe o USB para o Linux", "h2"))
+    E.append(P("No PowerShell <b>como administrador</b> (o <i>attach</i> precisa ser repetido toda vez que a placa "
+               "for reconectada):"))
     E.append(code("""
-winget install --interactive --exact dorssel.usbipd-win
-usbipd list                          # ache a linha "CP210x" ou "CH340", ex.: BUSID 1-4
-usbipd bind   --busid 1-4            # só na primeira vez
-usbipd attach --wsl --busid 1-4      # toda vez que plugar a placa
+winget install --exact dorssel.usbipd-win     # uma vez só
+usbipd list                                   # ache "CP210x" e anote o BUSID (ex.: 1-2)
+usbipd bind   --busid 1-2                     # uma vez só
+usbipd attach --wsl --busid 1-2               # toda vez que plugar a placa
 """))
-    E.append(P("No WSL, confira com <font name='Mono'>ls /dev/ttyUSB*</font>. Alternativa: use a opção B direto "
-               "no Windows, sem WSL."))
-    E.append(P("7.4 Comandos úteis", "h2"))
+    E.append(P("No WSL, libere a porta: <font name='Mono'>sudo chmod 666 /dev/ttyUSB0</font>. Se a porta não "
+               "aparecer, carregue o driver uma vez: <font name='Mono'>sudo modprobe cp210x</font>."))
+    E.append(P("6.4 Comandos úteis", "h2"))
     E.append(tabela([
         ["Comando", "O que faz"],
-        ["<font name='Mono'>pio run</font>", "Só compila e mostra o uso de memória (Flash ~24%, RAM ~7%)"],
         ["<font name='Mono'>pio run -t upload</font>", "Compila e grava"],
         ["<font name='Mono'>pio device monitor</font>", "Abre o monitor serial (115200 baud)"],
-        ["<font name='Mono'>pio device list</font>", "Lista as portas seriais encontradas"],
-        ["<font name='Mono'>pio run -t upload --upload-port /dev/ttyUSB0</font>",
-         "Grava numa porta específica (no Windows: COM5 etc.)"],
-        ["<font name='Mono'>pio run -t erase</font>",
-         "Apaga a flash inteira, inclusive senha e bloqueio. Grave de novo em seguida"],
-    ], [210, None]))
+        ["<font name='Mono'>pio run -t erase</font>", "Apaga a flash inteira (senha volta a 000000). Grave de novo depois"],
+    ], [180, None]))
     E.append(Spacer(1, 6))
-    E.append(callout("tip", "Se a gravação parar em <font name='Mono'>Connecting....____</font>, segure o "
-                            "botão <b>BOOT</b> da placa até aparecer <i>Writing at 0x…</i>. Se a porta nem "
-                            "aparece, troque o cabo: muitos cabos micro-USB só carregam e não transmitem dados."))
-    E.append(P("7.5 O que aparece no monitor serial", "h2"))
-    E.append(P("No primeiro boot, a memória está vazia e o firmware grava a senha de fábrica <b>000000</b>. "
-               "Uma sessão típica:"))
+    E.append(callout("tip", "Se a gravação parar em <font name='Mono'>Connecting...</font>, segure o botão "
+                            "<b>BOOT</b> da placa. Se a porta nem aparece, troque o cabo: muitos só carregam."))
+    E.append(P("6.5 O que aparece no monitor serial", "h2"))
     E.append(code("""
-[NVS] sem configuracao valida, usando padrao
-
-Talos: boot (wake=0, stealth=0)
+Talos: boot (wake=0, stealth=0, D12 livre: todas as teclas acordam)
 S1/S2: desafio anti-marcas = 4 7          <- digite 4 e 7
 S3: digite a senha (6 digitos) e #        <- digite 000000 e #
 S5: acesso concedido
 S7: trancado
 S0: deep sleep                            <- dorme logo após trancar
-Talos: boot (wake=3, stealth=0)           <- acordou pelo teclado
 """))
     E.append(P("<font name='Mono'>wake=0</font> indica ligar ou reset, <font name='Mono'>wake=3</font> uma "
-               "tecla e <font name='Mono'>wake=4</font> o timer (fim do bloqueio). O serial nunca mostra a "
-               "senha."))
-    E.append(P("7.6 Ajustando parâmetros", "h2"))
-    E.append(P("Todos os parâmetros ficam no topo de <font name='Mono'>src/main.cpp</font>. Depois de mudar, "
-               "grave de novo com <font name='Mono'>pio run -t upload</font>."))
+               "tecla e <font name='Mono'>wake=4</font> o fim de um bloqueio. O serial nunca mostra a senha."))
+    E.append(P("6.6 Ajustando parâmetros", "h2"))
+    E.append(P("Todos ficam no topo de <font name='Mono'>src/main.cpp</font>. Depois de mudar, grave de novo."))
     E.append(tabela([
         ["Constante", "Padrão", "Significado"],
-        ["T_INAT", "15000 ms", "Sem tecla em qualquer etapa: descarta a entrada e entra em deep sleep"],
+        ["T_INAT", "15000 ms", "Sem tecla em qualquer etapa: descarta a entrada e dorme"],
         ["T_ACIO", "5000 ms", "Tempo com a fechadura destravada"],
         ["N_TENT", "5", "Senhas erradas seguidas até o bloqueio"],
         ["T_LOCK / T_MAX", "60 s / 30 min", "Bloqueio inicial e teto (dobra a cada bloqueio)"],
         ["W_REC", "15 min", "Janela em que um novo bloqueio conta como consecutivo"],
-        ["DESAFIO_CONTA_FALHA", "false", "Errar o desafio conta como tentativa?"],
-        ["TEM_SENSOR_PORTA", "false", "Ative se instalar o reed switch"],
+        ["TECLADO_INVERTIDO", "true", "Fios do teclado na ordem 8…1 (true) ou 1…8 (false)"],
         ["TEM_DISPLAY", "false", "Ative quando ligar o módulo TM1637"],
-        ["TECLADO_INVERTIDO", "true", "Fios do teclado na ordem 8…1 (true) ou 1…8 (false); veja o §5.2"],
-        ["DEBUG_TECLADO", "false", "Mostra cada tecla no serial (revela a senha: só para diagnóstico)"],
-        ["BRILHO_DISPLAY / POS_TM", "4 / {2,1,0,5,4,3}", "Brilho (0–7) / ordem dos dígitos no módulo"],
-        ["V_LOW / BAT_DIV", "10,5 V / 4,3", "Limiar de bateria fraca / razão do divisor (calibre)"],
+        ["DEBUG_TECLADO", "false", "Mostra cada tecla no serial (revela a senha: só para teste)"],
+        ["V_LOW / BAT_DIV", "7,0 V / 4,3", "Limiar de bateria fraca / razão do divisor"],
     ], [120, 80, None]))
 
-    # ---------------- 8 operação
+    # ---------------- 7 operação
     E.append(PageBreak())
-    E.append(P("8. Operação", "h1"))
+    E.append(P("7. Operação", "h1"))
     E.append(figura_fluxo())
     E.append(P("Figura 10 – Uso normal do cofre.", "cap"))
-    E.append(P("8.1 Teclas", "h2"))
+    E.append(P("7.1 Teclas", "h2"))
     E.append(tabela([
         ["Tecla", "Função"],
-        ["0 – 9", "Dígitos do desafio e da senha. Qualquer tecla acorda o cofre (com o eFuse, §5.2)"],
-        ["*", "Limpar: apaga o que foi digitado (age ao <b>soltar</b> a tecla)"],
+        ["qualquer", "Acorda o cofre"],
+        ["0 – 9", "Dígitos do desafio e da senha"],
+        ["*", "Limpar: apaga o que foi digitado (age ao <b>soltar</b>)"],
         ["#", "Confirmar: só aceita com exatamente 6 dígitos (age ao <b>soltar</b>)"],
         ["A", "Trocar a senha: aperte durante os 5 s em que a tranca está aberta"],
-        ["* e # juntos por 3 s", "Liga/desliga o modo stealth (sem som). O LED pisca 2 vezes para confirmar"],
-        ["B, C, D", "Sem função (bipe de entrada inválida)"],
+        ["* e # juntos por 3 s", "Liga/desliga o modo stealth (sem som). O LED pisca 2 vezes"],
+        ["B, C, D", "Sem função"],
     ], [110, None], destaque_col0=True))
-    E.append(P("8.2 Lendo o desafio anti-marcas", "h2"))
-    E.append(P("Ao acordar, o cofre sorteia 2 dígitos. Digite esses 2 dígitos e então a senha. Como os dígitos "
-               "mudam a cada vez, todas as teclas se desgastam por igual e as marcas de uso não entregam a senha."))
-    E.append(P("<b>Agora, sem display:</b> cada dígito é um grupo de piscadas do LED com bipes, e o 0 é uma piscada "
-               "longa. O padrão se repete até você começar a digitar. Os dígitos também saem no monitor serial."))
+    E.append(P("7.2 Lendo o desafio anti-marcas", "h2"))
+    E.append(P("Ao acordar, o cofre sorteia 2 dígitos: digite-os e então a senha. Sem display, cada dígito é um "
+               "grupo de piscadas do LED com bipes (o 0 é uma piscada longa), e eles também saem no serial."))
     E.append(figura_piscadas())
     E.append(P("Figura 11 – Desafio em piscadas (sem display).", "cap"))
-    E.append(P("<b>Com o display (TEM_DISPLAY = true):</b> o desafio aparece no meio do display e as piscadas "
-               "deixam de ser usadas."))
+    E.append(P("Com o display ligado, o desafio aparece nele:"))
     E.append(figura_telas())
     E.append(P("Figura 12 – Telas do display.", "cap"))
-    E.append(callout("warn", "O display mostra os dígitos reais da senha enquanto ela é digitada. Isso facilita "
-                             "o uso, mas qualquer pessoa ao lado consegue ler. Cubra o display com a mão ao digitar."))
-    E.append(P("8.3 Trocar a senha", "h2"))
+    E.append(P("7.3 Trocar a senha", "h2"))
     E += numerados([
         "Abra o cofre normalmente (desafio + senha atual + #).",
-        "Enquanto a tranca está aberta (5 s), aperte <b>A</b>. A tranca fecha na hora e começa a troca. O display mostra <font name='Mono'>------</font> (sem display: bipe "
-        "duplo curto).",
-        "Digite a senha <b>atual</b> + <b>#</b>. Se estiver errada, conta como tentativa.",
-        "Digite a senha <b>nova</b> + <b>#</b> e depois repita a nova + <b>#</b>.",
-        "Três bipes crescentes indicam que a senha foi salva. Dois bipes indicam que as duas digitações não "
-        "conferem, e a senha antiga continua valendo.",
+        "Enquanto a tranca está aberta (5 s), aperte <b>A</b>. A tranca fecha e começa a troca.",
+        "Digite a senha <b>atual</b> + <b>#</b>, depois a <b>nova</b> + <b>#</b> e repita a nova + <b>#</b>.",
+        "Três bipes crescentes: senha salva. Dois bipes: as duas digitações não conferem e a antiga continua.",
     ])
-    E.append(P("8.4 Sons e sinais", "h2"))
+    E.append(P("7.4 Sons", "h2"))
     E.append(tabela([
-        ["Situação", "Som (e LED)"],
+        ["Situação", "Som"],
         ["Tecla aceita", "1 bipe curto"],
-        ["Pronto para a senha / entrada inválida / # com menos de 6 dígitos", "2 bipes curtíssimos"],
+        ["Pronto para a senha / entrada inválida", "2 bipes curtíssimos"],
         ["Desafio ou senha errados", "2 bipes curtos"],
         ["Acesso concedido", "3 bipes, cada um mais longo"],
         ["Bloqueio", "1 bipe longo (1,5 s)"],
         ["Bateria fraca (ao acordar)", "5 bipes rápidos"],
-        ["Modo stealth ligado/desligado", "LED pisca 2 vezes, sem som"],
-        ["Bateria fraca / bloqueio / destravado", "Com display: bAt / bLOC / OPEn"],
     ], [260, None]))
-    E.append(Spacer(1, 6))
-    E.append(P("8.5 Bloqueio", "h2"))
-    E.append(P("Na 5ª senha errada seguida, o cofre bloqueia por 60 s. Se outro bloqueio acontecer até 15 min "
-               "depois do fim do anterior, o tempo dobra (120 s, 240 s…) até 30 min. Durante o bloqueio, o "
-               "ESP32 dorme e <b>o teclado não o acorda</b>. Quando o tempo acaba, aperte qualquer tecla. "
-               "Tirar a bateria ou dar reset não zera o bloqueio, porque ele fica salvo na memória flash."))
-    E.append(callout("info", "Esqueceu a senha? Conecte o USB e rode <font name='Mono'>pio run -t erase</font> "
-                             "seguido de <font name='Mono'>pio run -t upload</font>. A senha volta a ser "
-                             "<b>000000</b>. Como isso exige abrir o cofre, é seguro."))
+    E.append(P("7.5 Erros e bloqueio", "h2"))
+    E.append(P("Senha errada: 2 bipes e você digita a senha de novo, sem novo desafio. Na 5ª senha errada "
+               "seguida, o cofre bloqueia por 60 s; se outro bloqueio acontecer até 15 min depois, o tempo dobra "
+               "(até 30 min). Durante o bloqueio, o teclado não acorda o cofre. Acertar a senha zera todas as "
+               "punições. Esqueceu a senha? Pelo USB, <font name='Mono'>pio run -t erase</font> e grave de novo: "
+               "a senha volta a <b>000000</b>."))
 
-    # ---------------- 9 testes
-    E.append(CondPageBreak(120 * mm))
-    E.append(P("9. Testes de aceitação", "h1"))
-    E.append(P("Estes testes seguem a Tabela 9 da monografia. Marque cada um depois da montagem final."))
-    testes = [
-        ["T-01", "RF-01", "Aperte cada tecla uma vez e depois segure uma tecla.", "Um bipe por toque. Segurar não repete."],
-        ["T-02", "RF-02", "Após o desafio, digite 3 dígitos e espere 15 s.", "Entrada descartada e o cofre dorme."],
-        ["T-03", "RF-15", "Digite 4 dígitos e aperte #.", "2 bipes curtíssimos. Não valida nem destrava."],
-        ["T-04", "RF-03", "Erre a senha 5 vezes seguidas.", "Bipe longo. Teclado ignorado por 60 s."],
-        ["T-05", "RF-04", "Provoque 2 bloqueios seguidos (até 15 min).", "Serial: o 2º dura 120 s."],
-        ["T-06", "RF-07", "Tente digitar a senha sem acertar o desafio.", "Dígito errado reinicia o desafio."],
-        ["T-07", "RF-14", "Segure * e # por 3 s e use o cofre.", "Nenhum som. Só o LED funciona."],
-        ["T-08", "RF-11", "Alimente com fonte ajustável em 10 V.", "5 bipes rápidos ao acordar."],
-        ["T-09", "RF-16", "Troque a senha, tire a bateria e religue.", "A senha nova continua valendo."],
-        ["T-11", "RF-17", "Com reed instalado: abra e feche a porta.", "Trava ao fechar, antes dos 5 s."],
-        ["T-12", "RF-05", "Fluxo completo: acordar, desafio, senha, #.", "Destrava 5 s com 3 bipes crescentes."],
-        ["Extra", "RF-07", "Com display: digite 888888 após o desafio.", "Todos os segmentos acendem por igual."],
-    ]
-    linhas = [["ID", "Req.", "Procedimento", "Resultado esperado", "OK"]] + [t_ + ["☐"] for t_ in testes]
-    t = tabela(linhas, [34, 38, 190, None, 26], destaque_col0=True)
-    t.setStyle(TableStyle([("FONTNAME", (4, 1), (4, -1), "Sym"), ("FONTSIZE", (4, 1), (4, -1), 12),
-                           ("ALIGN", (4, 0), (4, -1), "CENTER")]))
-    E.append(t)
-    E.append(Spacer(1, 8))
-    E.append(callout("tip", "Para os testes de bloqueio, deixe o monitor serial aberto: ele mostra a duração de "
-                            "cada bloqueio e o contador de falhas."))
+    # ---------------- 8 testes
+    E.append(P("8. Testes", "h1"))
+    E.append(P("Os casos de teste completos, com passo a passo e resultado esperado de cada um, estão no "
+               "documento <b>Guia de Testes</b> (<font name='Mono'>docs/Guia_Testes_Talos.pdf</font>)."))
 
-    # ---------------- 10 problemas
-    E.append(P("10. Solução de problemas", "h1"))
+    # ---------------- 9 problemas
+    E.append(P("9. Solução de problemas", "h1"))
     E.append(tabela([
         ["Sintoma", "Causa provável", "O que fazer"],
         ["Gravação para em “Connecting…”", "Placa não entrou em modo de gravação", "Segure BOOT durante a gravação"],
-        ["Porta serial não aparece", "Cabo só de carga, driver ou WSL", "Troque o cabo, instale CP210x/CH340, use "
-                                                                         "usbipd attach (§7.3)"],
-        ["Permission denied em /dev/ttyUSB0", "Usuário fora do grupo dialout", "§7.1, depois logout/login"],
-        ["Placa não inicia / reinicia em loop", "Algo além do fio 7 no D12, ou 12 V no VIN", "Deixe só o teclado no D12. Meça o buck"],
-        ["Teclas trocadas (aperto 1, sai outra)", "Ordem dos fios invertida", "Teste de continuidade (§5.2)"],
-        ["Uma linha ou coluna inteira não responde", "Fio solto ou no pino errado", "Confira a tabela do §5.2"],
-        ["Tecla não acorda a placa", "Placa sem o eFuse de 3,3 V: normal para as 4 teclas do D12", "Use outra tecla ou grave o eFuse (§5.2)"],
-        ["Teclas espelhadas (aperta 2, lê C)", "Ordem dos 8 fios invertida", "Troque TECLADO_INVERTIDO (§5.2)"],
-        ["Fechadura não aciona", "Sem 12 V, GND separado, MOSFET invertido",
-         "GND comum. MOSFET com as letras para você: G D S"],
-        ["Fechadura abre sozinha / no boot", "Falta o 10 kΩ do gate ao GND", "Coloque o resistor (§5.3)"],
-        ["ESP32 reinicia ao destravar", "Queda de tensão (brownout)", "Diodo no lugar, capacitor de 470 µF, bateria "
-                                                                    "carregada"],
-        ["Buzzer apita durante o sono", "Falta o 10 kΩ da base ao GND", "Coloque o resistor (§5.4)"],
-        ["Alerta de bateria fraca falso", "Divisor fora do valor", "Calibre BAT_DIV com o multímetro"],
+        ["Porta serial não aparece", "Cabo só de carga, driver ou WSL", "Troque o cabo; usbipd attach (§6.3)"],
+        ["Teclas espelhadas (aperta 2, lê C)", "Ordem dos fios invertida", "Troque TECLADO_INVERTIDO (§4.2)"],
+        ["Uma linha ou coluna não responde", "Fio solto ou no pino errado", "Confira a tabela do §2.1"],
+        ["Fechadura não aciona", "Sem bateria, GND separado, MOSFET invertido", "GND comum; G D S com as letras para você"],
+        ["Fechadura abre sozinha", "Falta o 10 kΩ do gate ao GND", "Coloque o resistor (§4.3)"],
+        ["ESP32 reinicia ao destravar", "Bateria fraca ou diodo ausente", "Troque a bateria; confira o diodo"],
+        ["Alerta de bateria fraca falso", "Divisor ausente (pino VP solto)", "Ligue o VP no GND ou monte o divisor"],
         ["Sem som nenhum", "Modo stealth ligado", "Segure * e # por 3 s"],
-        ["Display apagado", "TEM_DISPLAY = false, sem 3V3, DIO e CLK trocados", "§5.5"],
-        ["Dígitos fora de ordem", "Módulo com outra ordem interna", "Ajuste POS_TM (§5.5)"],
-        ["Display com lixo ou travado", "Fios longos ou mal encaixados", "Fios curtos (< 20 cm), conectores firmes"],
-        ["Teclado ignorado após erros", "Bloqueio ativo", "Espere (o serial mostra o tempo) e aperte uma tecla"],
+        ["[NVS] falha na verificação", "Gravação na flash falhou (energia fraca)", "Outra porta/cabo USB ou bateria nova"],
+        ["Teclado ignorado após erros", "Bloqueio ativo", "Espere (o serial mostra o tempo)"],
     ], [130, 140, None]))
 
-    # ---------------- 11 consumo
-    E.append(P("11. Consumo e limitações conhecidas", "h1"))
+    # ---------------- 10 limitações
+    E.append(P("10. Limitações conhecidas", "h1"))
     E += bullets([
-        "<b>Autonomia:</b> a meta de 2 anos da monografia pressupõe ~10 µA em repouso. A DevKit V1 sozinha gasta "
-        "alguns mA mesmo em deep sleep, por causa do LED PWR, do regulador AMS1117 e do chip USB, e o LM2596 "
-        "soma mais alguns mA. Com um pack de 2500 mAh, isso dá algumas semanas. Para chegar perto da meta, "
-        "use um módulo ESP32 sem a placa de desenvolvimento (ou remova o LED PWR) e um regulador de baixo "
-        "consumo (por exemplo, MP1584 ou HT7333 alimentado por um conversor de baixa corrente quiescente).",
-        "<b>Display:</b> o driver do TM1637 já está no firmware e foi compilado, mas só será testado no hardware "
-        "quando o módulo chegar. Até lá, o desafio sai em piscadas, bipes e no serial.",
-        "<b>Melodia:</b> o buzzer ativo tem um único tom. A “melodia ascendente” do RF-08 virou bipes de "
-        "duração crescente.",
-        "<b>Troca de senha por jumper:</b> não implementada. A troca é feita pela tecla A logo depois de "
-        "autenticar (RF-06).",
-        "<b>Aleatoriedade:</b> com Wi-Fi e Bluetooth desligados, o gerador do ESP32 é pseudoaleatório. Isso "
-        "basta para espalhar o desgaste das teclas, mas não serve para criptografia.",
+        "<b>Autonomia:</b> mesmo dormindo, a DevKit V1 gasta alguns mA (LED de energia, regulador e chip USB). "
+        "Com uma bateria de 9 V comum (~500 mAh), isso dá <b>poucos dias</b>. A meta de 2 anos da monografia "
+        "exigiria um ESP32 sem a placa de desenvolvimento.",
+        "<b>Buzzer:</b> recebe 3,3 V em vez de 5 V, então apita mais baixo. Tem um único tom, por isso a "
+        "“melodia” de sucesso virou bipes de duração crescente.",
+        "<b>Display:</b> o driver está pronto, mas só será testado quando o módulo chegar.",
+        "<b>Aleatoriedade:</b> com Wi-Fi e Bluetooth desligados, o sorteio do desafio é pseudoaleatório. Basta "
+        "para espalhar o desgaste das teclas.",
     ])
     doc.multiBuild(E)
 
