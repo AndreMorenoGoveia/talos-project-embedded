@@ -479,7 +479,7 @@ def diagrama_completo():
     fio(d, [b["+"][0], b["+"][1], 312, b["+"][1], 312, yv, xv, yv], C["v12"], 2.2)
     fio(d, [b["-"][0], b["-"][1], 300, b["-"][1], 300, yg, xg, yg], C["gnd"], 2.2)
     txt(d, 230, b["+"][1] + 4, "+9 V → VIN", 6.4, "Sans-B", C["v12"], "middle")
-    txt(d, 230, b["-"][1] + 4, "– → GND", 6.4, "Sans-B", C["gnd"], "middle")
+    txt(d, 230, b["-"][1] + 4, "- → GND", 6.4, "Sans-B", C["gnd"], "middle")
 
     # ---- módulo display TM1637 (ainda não chegou: tracejado)
     mx, my = 566, 256
@@ -534,7 +534,7 @@ def diagrama_completo():
     d.add(Rect(14, 333, 164, 131, rx=4, ry=4, fillColor=H("#F7F8FA"), strokeColor=LINE, strokeWidth=0.8))
     txt(d, lx, ly, "LEGENDA DOS FIOS", 7, "Sans-B", NAVY)
     itens = [(C["v12"], "+9 V (bateria)"), (C["gnd"], "GND (terra comum)"),
-             (KP[1], "teclado: linhas L1–L4"), (KP[5], "teclado: colunas C1–C4"),
+             (KP[1], "teclado: linhas L1 a L4"), (KP[5], "teclado: colunas C1 a C4"),
              (C["dio"], "display: DIO/CLK (a ligar)"), (C["lock"], "comando da fechadura"),
              (C["buz"], "comando do buzzer"), (C["bat"], "leitura da bateria"), (C["door"], "opcional (tracejado)")]
     for k, (cor, rot) in enumerate(itens):
@@ -557,7 +557,7 @@ def figura_pinagem():
                  5: ("teclado fio 1 · L1", KP[0]), 6: ("teclado fio 2 · L2", KP[1]), 7: ("teclado fio 3 · L3", KP[2]),
                  8: ("teclado fio 4 · L4", KP[3]), 9: ("teclado fio 5 · C1", KP[4]), 10: ("teclado fio 6 · C2", KP[5]),
                  11: ("teclado fio 7 · C3 (só ele!)", KP[6]), 12: ("teclado fio 8 · C4", KP[7]),
-                 13: ("GND comum (– da bateria)", C["gnd"]), 14: ("+9 V da bateria", C["v12"])}
+                 13: ("GND comum (- da bateria)", C["gnd"]), 14: ("+9 V da bateria", C["v12"])}
     funcs_dir = {5: ("display: CLK (TM1637)", C["clk"]), 6: ("display: DIO (TM1637)", C["dio"]),
                  8: ("buzzer (+)", C["buz"]), 9: ("tranca (gate do MOSFET)", C["lock"]),
                  11: ("LED de status", C["led"]), 13: ("GND (opcional)", C["gnd"]),
@@ -719,7 +719,7 @@ def bateria9v(d, x, y, w=96, h=46, mais_em_cima=True):
     d.add(Rect(x + w, y + 4, 12, h - 8, rx=2, ry=2, fillColor=H("#2B2B2B"), strokeColor=None))
     ym, yn = (y + h * 0.7, y + h * 0.3) if mais_em_cima else (y + h * 0.3, y + h * 0.7)
     txt(d, x + w + 16, ym + 3, "+", 9, "Sans-B", C["v12"])
-    txt(d, x + w + 16, yn + 3, "–", 9, "Sans-B", INK)
+    txt(d, x + w + 16, yn + 3, "-", 9, "Sans-B", INK)
     return {"+": (x + w + 12, ym), "-": (x + w + 12, yn)}
 
 
@@ -774,7 +774,7 @@ def figura_alimentacao():
     fio(d, [b["-"][0], b["-"][1], 380, b["-"][1]], C["gnd"], 2.2)
     txt(d, 409, 92, "ESP32", 7.4, "Sans-B", NAVY, "middle")
     txt(d, 200, b["+"][1] + 4, "fio vermelho (+)", 6.2, "Sans-I", C["v12"])
-    txt(d, 200, b["-"][1] + 4, "fio preto (–)", 6.2, "Sans-I", INK)
+    txt(d, 200, b["-"][1] + 4, "fio preto (-)", 6.2, "Sans-I", INK)
     ponto(d, 300, b["+"][1], C["v12"])
     ponto(d, 320, b["-"][1], C["gnd"])
     fio(d, [300, b["+"][1], 300, 100], C["v12"], 1.6)
@@ -785,7 +785,7 @@ def figura_alimentacao():
 
 
 def figura_fechadura():
-    d = Drawing(493, 200)
+    d = Drawing(493, 212)
     xs, ys = pino_esp(d, 4, 108, "RX2", "GPIO16")
     xg, yg = pino_esp(d, 4, 30, "GND")
     m = to220(d, 200, 128)
@@ -832,7 +832,7 @@ def figura_buzzer():
     fio(d, [bz["-"][0], bz["-"][1], bz["-"][0], yg, xg, yg], C["gnd"], 1.9)
     txt(d, 192, 74, "Buzzer ativo", 6.8, "Sans-B")
     txt(d, 192, 65, "perna longa (+) no TX2", 6, "Sans-I", MUTED)
-    txt(d, 192, 57, "perna curta (–) no GND", 6, "Sans-I", MUTED)
+    txt(d, 192, 57, "perna curta (-) no GND", 6, "Sans-I", MUTED)
     return d
 
 
@@ -857,7 +857,7 @@ def figura_componentes():
     bateria9v(d, 395, 74, 72, 36)
     txt(d, 437, 130, "Bateria 9 V", 7, "Sans-B", NAVY, "middle")
     txt(d, 437, 58, "clip: vermelho = +", 6, "Sans", INK, "middle")
-    txt(d, 437, 49, "preto = –", 6, "Sans", INK, "middle")
+    txt(d, 437, 49, "preto = -", 6, "Sans", INK, "middle")
     return d
 
 

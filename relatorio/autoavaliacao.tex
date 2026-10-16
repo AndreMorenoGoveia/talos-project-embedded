@@ -1,0 +1,25 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{parskip}
+\pagestyle{empty}
+
+\begin{document}
+\begin{center}
+{\large Projeto Talos: cofre eletrônico com ESP32}\\[4pt]
+PCS3848 Sistemas Embarcados, Escola Politécnica da USP\\[4pt]
+Autoavaliação de André Moreno (13682785)
+\end{center}
+\vspace{0.6cm}
+
+O grupo cumpriu o essencial do planejamento. O cofre já executa o fluxo completo na placa, com desafio anti-marcas, validação da senha por hash, bloqueio progressivo, troca de senha, modo stealth e deep sleep com despertar por qualquer tecla. A evolução física avançou até o protótipo em bancada com o teclado, o buzzer e a fechadura testada na bateria de 9 V. A montagem no case e o display ainda dependem de peças e de tempo de bancada. A documentação acompanhou o trabalho, com o guia de montagem, o guia de testes e o relatório técnico.
+
+Minha contribuição foi o desenvolvimento de todo o firmware do cofre. Escrevi a máquina de estados, a leitura do teclado, a persistência com cópia dupla e CRC, o acionamento da fechadura e o driver do display. Também conduzi os testes na placa e resolvi os problemas de mapeamento do teclado, de gravação na memória e de despertar pelo pino D12.
+
+Atribuo a mim a nota 10.
+
+\end{document}

@@ -56,3 +56,9 @@ dkms.conf
 
 .pio/
 __pycache__/
+relatorio/*.aux
+relatorio/*.log
+relatorio/*.toc
+relatorio/*.out
+relatorio/*.fls
+relatorio/*.fdb_latexmk
