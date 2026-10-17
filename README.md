@@ -37,7 +37,7 @@ O limiar de bateria fraca (`V_LOW = 7,0 V`) e a razão do divisor (`BAT_DIV`) fi
 | `0`–`9` | dígitos |
 | `*` | Limpar |
 | `#` | Confirmar |
-| `A` | troca de senha (durante os 5 s com a tranca aberta) |
+| `C` | troca de senha: senha antiga + `#`, depois senha nova + `#` |
 | `*` + `#` por 3 s | liga/desliga o modo stealth (sem som) |
 
 ## Uso
@@ -45,7 +45,7 @@ O limiar de bateria fraca (`V_LOW = 7,0 V`) e a razão do divisor (`BAT_DIV`) fi
 1. Aperte qualquer tecla para acordar.
 2. **Desafio anti-marcas**: o LED/buzzer indica 2 dígitos, cada um com N piscadas (0 = uma piscada longa). O padrão repete por até 15 s; sem resposta, o cofre volta a dormir. Os dígitos também saem no serial.
 3. Digite a senha (senha de fábrica: `000000`) e aperte `#`. Se errar, digite de novo (sem novo desafio).
-4. O solenoide solta por 5 s, trava de novo e o cofre volta a dormir.
+4. O solenoide solta por 3 s (com um tiriri rápido), trava de novo e o cofre volta a dormir.
 
 Depois de 5 erros, o cofre fica bloqueado por 60 s. Se houver novo bloqueio até 15 min depois do fim do anterior, o tempo dobra a cada vez, até 30 min. O bloqueio e o contador de erros ficam salvos na NVS, então resetar a placa não zera o bloqueio.
 

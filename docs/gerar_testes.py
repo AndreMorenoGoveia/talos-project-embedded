@@ -179,7 +179,7 @@ Talos: boot (wake=0, stealth=0, D12 livre: todas as teclas acordam)
                   "USB <b>desconectado</b>. Bateria 9 V: + no VIN e na fechadura, – no GND.",
                   ["Conecte a bateria.", "Aperte uma tecla, faça o desafio e digite a senha + #."],
                   ["O LED vermelho (PWR) da placa acende.",
-                   "Cada tecla dá um bipe e a fechadura abre por 5 s com a senha certa.",
+                   "Cada tecla dá um bipe e a fechadura abre por 3 s com a senha certa.",
                    "A placa não reinicia quando a fechadura aciona (se reiniciar, a bateria está fraca)."]))
 
     # ---------------- B. teclado
@@ -284,7 +284,7 @@ S1/S2: desafio anti-marcas = 2 5
                   "Fluxo completo de abertura.",
                   "Cronômetro. Fechadura ou LED no RX2.",
                   ["Desafio + <font name='Mono'>000000</font> + <b>#</b>.", "Cronometre o tempo aberto."],
-                  ["3 bipes crescentes.", "Fechadura/LED liga por <b>5 s</b> e desliga.",
+                  ["Tiriri rápido (3 bipes curtos).", "Fechadura/LED liga por <b>3 s</b> e desliga com 1 bipe.",
                    "Logo depois de trancar, o cofre dorme (sem novo desafio)."],
                   """
 S5: acesso concedido
@@ -358,37 +358,36 @@ S6: bloqueado por 60 s
     E.append(caso("TC-22", "Troca de senha com sucesso", "RF-06",
                   "Trocar a senha e usar a nova.",
                   "Senha atual 000000.",
-                  ["Abra o cofre normalmente.", "Durante os 5 s abertos, aperte <b>A</b>.",
-                   "Digite <font name='Mono'>000000</font> + #, depois <font name='Mono'>123456</font> + #, e de "
-                   "novo <font name='Mono'>123456</font> + #.",
+                  ["Acorde o cofre, faça o desafio e, no passo da senha, aperte <b>C</b>.",
+                   "Digite <font name='Mono'>000000</font> + # (senha antiga) e depois "
+                   "<font name='Mono'>123456</font> + # (senha nova).",
                    "Acorde e tente abrir com 000000 e depois com 123456."],
-                  ["Ao apertar A, a tranca fecha na hora.", "3 bipes crescentes e a senha nova é salva.",
+                  ["1 bipe ao aceitar a senha antiga.", "3 bipes crescentes ao confirmar a nova, que fica salva.",
                    "000000 dá Falha; 123456 abre."],
                   """
-S8: troca de senha - digite a senha ATUAL e #
+S8: troca de senha - digite a senha ANTIGA e #
 S8: digite a NOVA senha e #
-S8: repita a nova senha e #
 [LOG] senha alterada
 S0: deep sleep
 """))
-    E.append(caso("TC-23", "Repetição diferente", "RF-06",
-                  "Confirmar que, se a repetição não confere, a senha antiga continua.",
+    E.append(caso("TC-23", "Troca a partir do desafio", "RF-06",
+                  "Confirmar que a tecla C também funciona antes de responder ao desafio.",
                   "Senha atual conhecida.",
-                  ["Abra, aperte A, digite a atual + #.", "Digite <font name='Mono'>111111</font> + # e depois "
-                                                             "<font name='Mono'>222222</font> + #."],
-                  ["2 bipes curtos e <font name='Mono'>S8: senhas nao conferem</font>.", "A senha antiga continua valendo."],
-                  "S8: senhas nao conferem"))
-    E.append(caso("TC-24", "Senha atual errada na troca", "RF-06, RF-03",
-                  "Confirmar que errar a senha atual conta como tentativa e cancela a troca.",
+                  ["Acorde o cofre e, ainda no desafio, aperte <b>C</b>.", "Digite a senha antiga + # e uma nova + #."],
+                  ["Aparece <font name='Mono'>S8: troca de senha</font> sem precisar do desafio.",
+                   "A senha nova é salva (3 bipes crescentes)."],
+                  "S8: troca de senha - digite a senha ANTIGA e #"))
+    E.append(caso("TC-24", "Senha antiga errada na troca", "RF-06, RF-03",
+                  "Confirmar que errar a senha antiga conta como tentativa e cancela a troca.",
                   "Senha atual conhecida.",
-                  ["Abra, aperte A.", "Digite uma senha atual errada + #."],
+                  ["Acorde, aperte C.", "Digite uma senha antiga errada + #."],
                   ["<font name='Mono'>Falha 1/5</font> e o cofre dorme. A senha não muda."],
                   "Falha 1/5"))
-    E.append(caso("TC-25", "A fora da janela", "RF-06",
-                  "Confirmar que a troca só começa com o cofre aberto.",
-                  "Cofre no passo da senha.",
-                  ["Aperte A."],
-                  ["2 bipes curtíssimos e nada muda (não aparece S8)."]))
+    E.append(caso("TC-25", "C com a tranca aberta", "RF-06",
+                  "Confirmar que a tecla C não faz nada enquanto a tranca está aberta.",
+                  "Senha atual conhecida.",
+                  ["Abra o cofre.", "Durante os 3 s abertos, aperte C."],
+                  ["Nada muda: não aparece S8 e a tranca fecha normalmente após 3 s."]))
     E.append(caso("TC-26", "Senha nova sobrevive a desligar", "RF-16, RNF-03",
                   "Confirmar que a senha fica gravada na memória.",
                   "Senha trocada no TC-22.",
@@ -403,8 +402,9 @@ S0: deep sleep
                   "Stealth desligado.",
                   ["Provoque cada situação da lista ao lado."],
                   ["Tecla: 1 bipe curto ☐", "Senha/desafio errado: 2 bipes curtos ☐",
-                   "Acesso: 3 bipes crescentes ☐", "Bloqueio: 1 bipe longo ☐",
-                   "Entrada inválida / # com menos de 6: 2 bipes curtíssimos ☐"]))
+                   "Acesso: tiriri rápido ☐", "Tranca fechou: 1 bipe ☐", "Bloqueio: 1 bipe longo ☐",
+                   "Entrada inválida / # com menos de 6: 2 bipes curtíssimos ☐",
+                   "Acordar pelo teclado: 1 bipe ☐", "Desafio: <b>nenhum</b> som, só o LED pisca ☐"]))
     E.append(caso("TC-28", "Modo stealth", "RF-14",
                   "Confirmar que o modo stealth tira todo o som e fica salvo.",
                   "Cofre acordado.",
@@ -423,11 +423,11 @@ S0: deep sleep
                    "Aperte EN algumas vezes."],
                   ["A fechadura <b>nunca</b> recolhe a lingueta fora do acesso concedido."]))
     E.append(caso("TC-30", "Fechadura real abre a porta", "RF-05",
-                  "Confirmar que 5 s bastam para abrir a porta do case.",
+                  "Confirmar que 3 s bastam para abrir a porta do case.",
                   "Fechadura instalada no case, bateria nova.",
-                  ["Abra com a senha e puxe a porta durante os 5 s.", "Feche a porta empurrando."],
-                  ["A porta abre dentro dos 5 s.", "Ao fechar, a lingueta chanfrada trava sozinha.",
-                   "Se 5 s for pouco, aumente <font name='Mono'>T_ACIO</font> (até 10 s)."]))
+                  ["Abra com a senha e puxe a porta durante os 3 s.", "Feche a porta empurrando."],
+                  ["A porta abre dentro dos 3 s.", "Ao fechar, a lingueta chanfrada trava sozinha.",
+                   "Se 3 s for pouco, aumente <font name='Mono'>T_ACIO</font> (até 10 s)."]))
 
     # ---------------- H. bateria, memória e display
     E.append(PageBreak())
@@ -437,7 +437,7 @@ S0: deep sleep
                   "Divisor 330 kΩ / 100 kΩ montado no VP. Uma bateria gasta ou fonte ajustável.",
                   ["Com bateria boa (acima de 7 V): acorde o cofre.", "Com 6,5 V: acorde o cofre."],
                   ["Com bateria boa: nenhum aviso.",
-                   "Com 6,5 V: 5 bipes rápidos e <font name='Mono'>Bateria baixa</font> no serial.",
+                   "Com 6,5 V: o LED pisca 5 vezes rápido (sem som) e aparece <font name='Mono'>Bateria baixa</font> no serial.",
                    "Sem o divisor, o pino fica solto e o aviso pode aparecer errado: ligue o VP no GND."],
                   "Bateria baixa: 6.48 V"))
     E.append(caso("TC-32", "Memória (flash) saudável", "RNF-03",

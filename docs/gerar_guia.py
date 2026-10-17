@@ -389,8 +389,8 @@ def teclado(d, x, y, w, h, legenda=False):
                        fillOpacity=0.13, strokeColor=None))
             tecla = TECLAS[li][co]
             txt(d, kx + kw / 2, ky + kh / 2 - kh * 0.17, tecla, kh * 0.5, "Sans-B", white, "middle")
-            if legenda and tecla in "*#A":
-                sub = {"*": "LIMPAR", "#": "CONFIRMAR", "A": "TROCAR SENHA"}[tecla]
+            if legenda and tecla in "*#C":
+                sub = {"*": "LIMPAR", "#": "CONFIRMAR", "C": "TROCAR SENHA"}[tecla]
                 txt(d, kx + kw / 2, ky - 7, sub, 5.2, "Sans-B", H("#FFD27A"), "middle")
 
 
@@ -901,7 +901,7 @@ def figura_blocos():
 def figura_fluxo():
     d = Drawing(500, 150)
     caixas = [("Aperte qualquer", "tecla (acorda)"), ("Digite os 2 dígitos", "do desafio"),
-              ("Digite a senha", "(6 dígitos) + #"), ("Destrava", "por 5 s"), ("Trava e", "dorme")]
+              ("Digite a senha", "(6 dígitos) + #"), ("Destrava", "por 3 s"), ("Trava e", "dorme")]
     xs = [8 + 99 * k for k in range(5)]
     for k, (a, b) in enumerate(caixas):
         cor = [MUTED, KP[1], NAVY, H("#2E7D32"), C["lock"]][k]
@@ -923,17 +923,17 @@ def figura_fluxo():
     linha(d, xs[4] + 42, 82, xs[4] + 42, 50, MUTED, 1, [3, 2])
     txt(d, xs[4] + 42, 40, "15 s sem tecla em", 6, "Sans-I", MUTED, "middle")
     txt(d, xs[4] + 42, 31, "qualquer etapa: dorme", 6, "Sans-I", MUTED, "middle")
-    txt(d, xs[3] + 42, 74, "tecla A (nesses 5 s):", 6, "Sans-I", MUTED, "middle")
-    txt(d, xs[3] + 42, 66, "trocar senha", 6, "Sans-I", MUTED, "middle")
+    txt(d, xs[1] + 42, 74, "tecla C:", 6, "Sans-I", MUTED, "middle")
+    txt(d, xs[1] + 42, 66, "trocar senha", 6, "Sans-I", MUTED, "middle")
     return d
 
 # ------------------------------------------------------------------ figura: telas dos displays
 def figura_telas():
     d = Drawing(500, 236)
     telas = [("  47  ", "Desafio: digite 4 e depois 7"), ("  4.7  ", "4 aceito (o ponto acende)"),
-             ("123___", "Senha: dígitos digitados, _ = falta"), (" OPEn ", "Destravado (5 s)"),
+             ("123___", "Senha: dígitos digitados, _ = falta"), (" OPEn ", "Destravado (3 s)"),
              (" bLOC ", "Bloqueado (depois apaga)"), (" bAt  ", "Bateria fraca (ao acordar)"),
-             ("------", "Troca de senha (após a tecla A)"), ("      ", "Apagado: dormindo")]
+             ("------", "Troca de senha (após a tecla C)"), ("      ", "Apagado: dormindo")]
     for k, (t_, legenda) in enumerate(telas):
         col, lin = k % 2, k // 2
         x, y = 16 + col * 250, 200 - lin * 58
@@ -992,7 +992,7 @@ def figura_piscadas():
     txt(d, marcas[0][0] + 7.8, yb - 12, "0,2 s", 5.6, "Sans", MUTED, "middle")
     txt(d, marcas[6][0] + 31, yb - 12, "0,8 s", 5.6, "Sans", MUTED, "middle")
     txt(d, x + 8, yb + 12, "repete…", 6.4, "Sans-I", MUTED)
-    txt(d, 250, 8, "Exemplo: desafio “3 0”. Digite 3 e depois 0. O buzzer bipa junto (exceto no modo stealth).",
+    txt(d, 250, 8, "Exemplo: desafio “3 0”. Digite 3 e depois 0. Só o LED pisca, sem som.",
         6.6, "Sans-I", INK, "middle")
     return d
 
@@ -1206,7 +1206,7 @@ def construir():
     E.append(P("4.3 Fechadura", "h2"))
     E.append(P("O pino do ESP32 não aguenta a corrente da fechadura, então quem a liga é um <b>MOSFET</b>, que "
                "funciona como uma chave. Quando o RX2 vai para HIGH, o MOSFET fecha o caminho entre a fechadura "
-               "e o GND, e a lingueta recolhe por 5 s. São só 3 peças além da fechadura:"))
+               "e o GND, e a lingueta recolhe por 3 s. São só 3 peças além da fechadura:"))
     E.append(figura_fechadura())
     E.append(P("Figura 5 – Montagem da fechadura. O fio cinza passa por cima do preto sem encostar.", "cap"))
     E.append(tabela([
@@ -1256,7 +1256,7 @@ def construir():
         "fica solto; nesse caso, ligue o VP no GND).",
         "<b>LED externo:</b> o LED azul da placa (D2) já pisca junto com os bipes. Para vê-lo de fora do case, "
         "ligue um LED com 220 Ω no D2.",
-        "<b>Sensor de porta:</b> não foi comprado. Sem ele, a fechadura trava sozinha após 5 s.",
+        "<b>Sensor de porta:</b> não foi comprado. Sem ele, a fechadura trava sozinha após 3 s.",
     ])
 
     E.append(CondPageBreak(70 * mm))
@@ -1277,7 +1277,7 @@ def construir():
         ("Fechadura", "Monte o MOSFET, o resistor de 10 kΩ e o diodo (§4.3). Antes da fechadura, dá para testar "
                       "com um LED + resistor no lugar dela."),
         ("Bateria", "Desconecte o USB. Ligue a bateria: + no VIN e na fechadura, – no GND. O LED vermelho da "
-                    "placa acende. Senha <font name='Mono'>000000</font> + <b>#</b> deve recolher a lingueta por 5 s."),
+                    "placa acende. Senha <font name='Mono'>000000</font> + <b>#</b> deve recolher a lingueta por 3 s."),
         ("Case", "Fixe o teclado na tampa e a fechadura alinhada com o batente. Deixe a bateria acessível por "
                  "fora (RF-10). Rode o Guia de Testes."),
     ]
@@ -1346,7 +1346,7 @@ S0: deep sleep                            <- dorme logo após trancar
     E.append(tabela([
         ["Constante", "Padrão", "Significado"],
         ["T_INAT", "15000 ms", "Sem tecla em qualquer etapa: descarta a entrada e dorme"],
-        ["T_ACIO", "5000 ms", "Tempo com a fechadura destravada"],
+        ["T_ACIO", "3000 ms", "Tempo com a fechadura destravada"],
         ["N_TENT", "5", "Senhas erradas seguidas até o bloqueio"],
         ["T_LOCK / T_MAX", "60 s / 30 min", "Bloqueio inicial e teto (dobra a cada bloqueio)"],
         ["W_REC", "15 min", "Janela em que um novo bloqueio conta como consecutivo"],
@@ -1368,13 +1368,13 @@ S0: deep sleep                            <- dorme logo após trancar
         ["0 – 9", "Dígitos do desafio e da senha"],
         ["*", "Limpar: apaga o que foi digitado (age ao <b>soltar</b>)"],
         ["#", "Confirmar: só aceita com exatamente 6 dígitos (age ao <b>soltar</b>)"],
-        ["A", "Trocar a senha: aperte durante os 5 s em que a tranca está aberta"],
+        ["C", "Trocar a senha (no desafio ou na senha)"],
         ["* e # juntos por 3 s", "Liga/desliga o modo stealth (sem som). O LED pisca 2 vezes"],
-        ["B, C, D", "Sem função"],
+        ["A, B, D", "Sem função"],
     ], [110, None], destaque_col0=True))
     E.append(P("7.2 Lendo o desafio anti-marcas", "h2"))
     E.append(P("Ao acordar, o cofre sorteia 2 dígitos: digite-os e então a senha. Sem display, cada dígito é um "
-               "grupo de piscadas do LED com bipes (o 0 é uma piscada longa), e eles também saem no serial."))
+               "grupo de piscadas do LED, sem som (o 0 é uma piscada longa), e eles também saem no serial."))
     E.append(figura_piscadas())
     E.append(P("Figura 11 – Desafio em piscadas (sem display).", "cap"))
     E.append(P("Com o display ligado, o desafio aparece nele:"))
@@ -1382,20 +1382,22 @@ S0: deep sleep                            <- dorme logo após trancar
     E.append(P("Figura 12 – Telas do display.", "cap"))
     E.append(P("7.3 Trocar a senha", "h2"))
     E += numerados([
-        "Abra o cofre normalmente (desafio + senha atual + #).",
-        "Enquanto a tranca está aberta (5 s), aperte <b>A</b>. A tranca fecha e começa a troca.",
-        "Digite a senha <b>atual</b> + <b>#</b>, depois a <b>nova</b> + <b>#</b> e repita a nova + <b>#</b>.",
-        "Três bipes crescentes: senha salva. Dois bipes: as duas digitações não conferem e a antiga continua.",
+        "Acorde o cofre e aperte <b>C</b> (no desafio ou no passo da senha).",
+        "Digite a senha <b>antiga</b> + <b>#</b>. Se estiver errada, conta como tentativa errada e o cofre dorme.",
+        "Digite a senha <b>nova</b> + <b>#</b>. O # confirma: três bipes crescentes e a senha nova está salva.",
     ])
     E.append(P("7.4 Sons", "h2"))
     E.append(tabela([
         ["Situação", "Som"],
         ["Tecla aceita", "1 bipe curto"],
-        ["Pronto para a senha / entrada inválida", "2 bipes curtíssimos"],
+        ["Entrada inválida / # com menos de 6 dígitos", "2 bipes curtíssimos"],
         ["Desafio ou senha errados", "2 bipes curtos"],
-        ["Acesso concedido", "3 bipes, cada um mais longo"],
+        ["Acesso concedido", "tiriri rápido (3 bipes curtos)"],
+        ["Tranca fechou / senha antiga aceita na troca", "1 bipe"],
+        ["Senha nova salva", "3 bipes, cada um mais longo"],
         ["Bloqueio", "1 bipe longo (1,5 s)"],
-        ["Bateria fraca (ao acordar)", "5 bipes rápidos"],
+        ["Acordar pelo teclado", "1 bipe"],
+        ["Desafio e bateria fraca", "sem som: só o LED pisca"],
     ], [260, None]))
     E.append(P("7.5 Erros e bloqueio", "h2"))
     E.append(P("Senha errada: 2 bipes e você digita a senha de novo, sem novo desafio. Na 5ª senha errada "

@@ -12,7 +12,7 @@
 
 // ---------------- Parâmetros configuráveis (Tabela 8) ----------------
 constexpr uint32_t T_INAT    = 15000;  // ms, sem tecla: descarta a entrada e entra em deep sleep (RF-02/RF-12)
-constexpr uint32_t T_ACIO    = 5000;   // ms, solenoide energizado (destravado)
+constexpr uint32_t T_ACIO    = 3000;   // ms, solenoide energizado (destravado)
 constexpr uint32_t T_DEB     = 50;     // ms, debounce
 constexpr uint32_t T_STEALTH = 3000;   // ms, segurar * + # para alternar stealth
 constexpr uint32_t T_LOCK    = 60;     // s, lockout base
@@ -21,6 +21,7 @@ constexpr uint32_t W_REC     = 15 * 60;// s, janela de recorrência de lockouts
 constexpr uint8_t  N_TENT    = 5;      // tentativas antes do lockout
 constexpr bool     DESAFIO_CONTA_FALHA = false;  // erro no desafio conta como tentativa?
 constexpr bool     TEM_SENSOR_PORTA    = false;  // reed switch não comprado; ligue quando instalar
+constexpr bool     TRANCA_ATIVA_EM_HIGH = true;  // false para módulo relé que aciona com IN em LOW
 constexpr bool     TEM_DISPLAY         = false;  // módulo TM1637 de 6 dígitos ainda não chegou; true ao ligar
 constexpr uint8_t  BRILHO_DISPLAY      = 4;      // 0..7
 constexpr bool     DEBUG_TECLADO       = false;  // imprime cada tecla lida (revela a senha: só p/ diagnóstico)
@@ -52,11 +53,11 @@ const char LAYOUT[4][4] = {{'1', '2', '3', 'A'},  // como as teclas aparecem no 
 char tecla(int energizada, int lida) {
   return TECLADO_INVERTIDO ? LAYOUT[3 - energizada][3 - lida] : LAYOUT[lida][energizada];
 }
-constexpr char K_LIMPAR = '*', K_CONFIRMAR = '#', K_ADMIN = 'A';
+constexpr char K_LIMPAR = '*', K_CONFIRMAR = '#', K_ADMIN = 'C';  // C: trocar a senha
 constexpr uint16_t COMBO_STEALTH = TECLADO_INVERTIDO ? (1 << 3) | (1 << 1)    // * e # (bit = energizada*4 + lida)
                                                      : (1 << 3) | (1 << 11);
 
-constexpr uint8_t PIN_TRANCA = 16;  // gate do MOSFET do solenoide (pull-down 10k no gate!)
+constexpr uint8_t PIN_TRANCA = 16;  // IN do módulo relé (ou gate do MOSFET com pull-down 10k)
 constexpr uint8_t PIN_BUZZER = 17;  // base do NPN do buzzer ativo 5 V
 constexpr uint8_t PIN_LED    = 2;   // LED azul da placa (status: pisca junto com os bipes)
 constexpr uint8_t PIN_PORTA  = 39;  // VN: reed switch, LOW = fechada (pull-up externo)
@@ -93,12 +94,15 @@ void salvaCfg() {
   const char *k = ativaB ? "cfg_a" : "cfg_b";  // grava sempre na cópia inativa
   cfg.seq++;
   cfg.crc = crcDe(cfg);
+  bool buz = digitalRead(PIN_BUZZER);
+  digitalWrite(PIN_BUZZER, LOW);  // buzzer ligado durante a gravação aumenta a chance de erro na flash
   for (int tentativa = 1; tentativa <= 3; tentativa++) {  // flash pode corromper uma gravação: repete
     nvs.putBytes(k, &cfg, sizeof cfg);
     Cfg lida;
-    if (leCopia(k, lida) && !memcmp(&lida, &cfg, sizeof cfg)) { ativaB = !ativaB; return; }
+    if (leCopia(k, lida) && !memcmp(&lida, &cfg, sizeof cfg)) { ativaB = !ativaB; break; }
     Serial.printf("[NVS] falha na verificacao da escrita (tentativa %d/3)\n", tentativa);
   }
+  digitalWrite(PIN_BUZZER, buz);
 }
 
 void hashSenha(const char *s, uint8_t out[32]) { mbedtls_sha256_ret((const uint8_t *)s, 6, out, 0); }
@@ -139,6 +143,10 @@ const uint16_t P_SUCESSO[] = {60, 60, 120, 60, 300};
 const uint16_t P_BLOQUEIO[] = {1500};
 const uint16_t P_BATERIA[] = {100, 100, 100, 100, 100, 100, 100, 100, 100};
 const uint16_t P_PISCA2[] = {150, 150, 150};
+const uint16_t P_TRAVA[]  = {150};
+const uint16_t P_ABRE[]   = {50, 35, 50, 35, 110};  // "tiriri" rápido ao abrir
+// Som só ao digitar (e nas respostas ao que foi digitado), ao abrir, ao trancar e no bloqueio.
+// Desafio, bateria fraca e avisos automáticos ficam só no LED.
 #define PLAY(p, ...) toca(p, sizeof(p) / sizeof(p[0]), ##__VA_ARGS__)
 
 uint16_t pad[48];
@@ -267,7 +275,6 @@ enum Estado { S0_DESCANSO, S1_ENTROPIA, S2_DESAFIO, S3_SENHA, S4_VALIDACAO, S5_A
 Estado st;
 char buf[6];
 uint8_t len, d1, d2, passoTroca;
-uint8_t novaHash[32];
 uint32_t tEstado, tAtividade;
 bool portaAbriu;
 
@@ -305,7 +312,7 @@ void mostraDesafio() {  // sem display: d piscadas/bipes por dígito (0 = uma lo
     p[n - 1] = 1000;
   }
   p[n - 1] = 2500;
-  toca(p, n, true, true);
+  toca(p, n, false, true);  // só LED: sem bipe ao acordar
 }
 
 void atualizaTela() {
@@ -338,20 +345,20 @@ void entra(Estado e) {
       break;
     case S3_SENHA:
       Serial.println("S3: digite a senha (6 digitos) e #");
-      PLAY(P_LEVE);
+      PLAY(P_LEVE, false);
       break;
     case S4_VALIDACAO: break;  // tratado em valida()
     case S5_ACESSO:
       Serial.println("S5: acesso concedido");
-      digitalWrite(PIN_TRANCA, HIGH);
-      PLAY(P_SUCESSO);
-      tAtividade = millis();
-      portaAbriu = false;
       if (cfg.falhas || cfg.lockouts || cfg.lastLockTs || cfg.bloqueado) {  // acerto zera todas as punições
-        cfg.falhas = cfg.lockouts = cfg.bloqueado = 0;
+        cfg.falhas = cfg.lockouts = cfg.bloqueado = 0;  // grava antes de ligar tranca e buzzer
         cfg.lastLockTs = 0;
         salvaCfg();
       }
+      digitalWrite(PIN_TRANCA, TRANCA_ATIVA_EM_HIGH);
+      PLAY(P_ABRE);
+      tAtividade = millis();
+      portaAbriu = false;
       break;
     case S6_BLOQUEIO: {  // teclas ignoradas: dorme só com o timer até o fim do lockout
       uint32_t agora = time(nullptr), dur = lockoutS(cfg.lockouts - 1);
@@ -370,15 +377,16 @@ void entra(Estado e) {
       break;
     }
     case S7_TRANCA:
-      digitalWrite(PIN_TRANCA, LOW);  // solenoide NF: sem energia = travado
+      digitalWrite(PIN_TRANCA, !TRANCA_ATIVA_EM_HIGH);  // solenoide NF: sem energia = travado
       Serial.println("S7: trancado");
+      PLAY(P_TRAVA);
       delay(100);  // assentamento mecânico da lingueta
       entra(S0_DESCANSO);
       break;
     case S8_TROCA:
       passoTroca = 0;
-      Serial.println("S8: troca de senha - digite a senha ATUAL e #");
-      PLAY(P_LEVE);
+      Serial.println("S8: troca de senha - digite a senha ANTIGA e #");
+      PLAY(P_LEVE, false);
       break;
   }
 }
@@ -393,35 +401,27 @@ void valida() {  // S4
   else registraFalha(S3_SENHA);  // errou: digita a senha de novo, sem novo desafio
 }
 
-void passoTrocaSenha() {  // S8: atual -> nova -> repetição -> NVS
+void passoTrocaSenha() {  // S8: senha antiga -> senha nova (# confirma) -> NVS
   uint8_t h[32];
   hashSenha(buf, h);
   memset(buf, 0, sizeof buf);
   len = 0;
   if (passoTroca == 0) {
     contaTentativa();
-    if (!hashIgual(h, cfg.hash)) { registraFalha(S0_DESCANSO); return; }
+    if (!hashIgual(h, cfg.hash)) { registraFalha(S0_DESCANSO); return; }  // antiga errada conta como tentativa
     cfg.falhas = 0;
     salvaCfg();
     Serial.println("S8: digite a NOVA senha e #");
-  } else if (passoTroca == 1) {
-    memcpy(novaHash, h, 32);
-    Serial.println("S8: repita a nova senha e #");
-  } else {
-    if (hashIgual(h, novaHash)) {
-      memcpy(cfg.hash, novaHash, 32);
-      salvaCfg();
-      Serial.println("[LOG] senha alterada");
-      PLAY(P_SUCESSO);
-    } else {
-      Serial.println("S8: senhas nao conferem");
-      PLAY(P_ERRO);
-    }
-    entra(S0_DESCANSO);
+    passoTroca = 1;
+    PLAY(P_TRAVA);  // 1 bipe: senha antiga aceita
     return;
   }
-  passoTroca++;
-  PLAY(P_LEVE);
+  memcpy(cfg.hash, h, 32);
+  salvaCfg();
+  Serial.println("[LOG] senha alterada");
+  PLAY(P_SUCESSO);  // 3 bipes crescentes: senha nova salva
+  esperaPadrao();
+  entra(S0_DESCANSO);
 }
 
 // ---------------- S0: deep sleep ----------------
@@ -429,7 +429,7 @@ void dorme(uint32_t s) {  // s > 0: acorda só pelo timer, após s segundos (loc
   Serial.printf("S0: deep sleep%s\n", s ? " (timer)" : "");
   padLen = 0;
   saida(false);
-  digitalWrite(PIN_TRANCA, LOW);
+  digitalWrite(PIN_TRANCA, !TRANCA_ATIVA_EM_HIGH);
   if (TEM_DISPLAY) tmComando(0x80);  // display desligado (o TM1637 guarda o estado no sleep)
   if (s) {
     esp_sleep_enable_timer_wakeup(s * 1000000ULL);
@@ -461,7 +461,7 @@ void checaBateria() {  // RF-11
   if (mv > 500 && v < V_LOW) {  // < 0,5 V no pino = divisor ausente (ex.: alimentado por USB)
     Serial.printf("Bateria baixa: %.2f V\n", v);
     mostra(" bAt  ");
-    PLAY(P_BATERIA);
+    PLAY(P_BATERIA, false);  // só LED
     esperaPadrao();
   }
 }
@@ -469,7 +469,7 @@ void checaBateria() {  // RF-11
 void setup() {
   setCpuFrequencyMhz(80);  // RNF-05: teclado e buzzer não precisam de 240 MHz
   Serial.begin(115200);
-  pinMode(PIN_TRANCA, OUTPUT); digitalWrite(PIN_TRANCA, LOW);  // RNF-01: estado seguro
+  pinMode(PIN_TRANCA, OUTPUT); digitalWrite(PIN_TRANCA, !TRANCA_ATIVA_EM_HIGH);  // RNF-01: estado seguro
   pinMode(PIN_BUZZER, OUTPUT); digitalWrite(PIN_BUZZER, LOW);
   pinMode(PIN_LED, OUTPUT);    digitalWrite(PIN_LED, LOW);
   if (TEM_SENSOR_PORTA) pinMode(PIN_PORTA, INPUT);
@@ -484,6 +484,7 @@ void setup() {
   Serial.printf("\nTalos: boot (wake=%d, stealth=%u, D12 %s)\n", esp_sleep_get_wakeup_cause(), cfg.stealth,
                 d12Livre() ? "livre: todas as teclas acordam" : "strapping: 4 teclas nao acordam");
   checaBateria();
+  if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT1) PLAY(P_CLIQUE);  // bipe único ao acordar pelo teclado
   uint32_t agora = time(nullptr);
   if (!cfg.bloqueado && agora < cfg.lastLockTs) {  // relógio zerou (sem bateria): janela W_REC recomeça agora
     cfg.lastLockTs = agora;
@@ -502,11 +503,6 @@ void loop() {
   if (k || estavel) tAtividade = agora;
 
   if (st == S5_ACESSO) {  // RF-17
-    if (k == K_ADMIN) {  // troca de senha: só enquanto a tranca está aberta (RF-06)
-      digitalWrite(PIN_TRANCA, LOW);
-      entra(S8_TROCA);
-      return;
-    }
     bool fechada = TEM_SENSOR_PORTA && digitalRead(PIN_PORTA) == LOW;
     if (TEM_SENSOR_PORTA && !fechada) portaAbriu = true;
     if ((portaAbriu && fechada) || agora - tEstado >= T_ACIO) entra(S7_TRANCA);
@@ -518,6 +514,12 @@ void loop() {
     entra(S0_DESCANSO);
   }
   if (!k) return;
+
+  if (k == K_ADMIN && (st == S2_DESAFIO || st == S3_SENHA)) {  // RF-06: C inicia a troca de senha
+    PLAY(P_CLIQUE);
+    entra(S8_TROCA);
+    return;
+  }
 
   bool digito = k >= '0' && k <= '9';
   if (st == S2_DESAFIO) {  // RF-07: compara dígito a dígito

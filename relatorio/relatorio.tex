@@ -83,7 +83,7 @@ RF-18 & Indicar o sucesso da autenticação & Implementado \\
 \end{tabularx}
 \end{table}
 
-O RF-06 está parcial porque o grupo trocou a janela de 60 s após a autenticação por uma janela mais simples. A troca de senha começa quando o usuário aperta a tecla A durante os 5 s em que a fechadura está aberta. O modo por jumper interno não entrou no firmware. O RF-11 está parcial porque o firmware já mede a bateria e avisa abaixo de 7 V, mas o divisor resistivo ainda não faz parte da montagem. O RF-10 depende da montagem no case e o RF-17 depende de um sensor de porta que o grupo ainda não comprou. O firmware já trata o sensor e só precisa que alguém ative a constante correspondente.
+O RF-06 está parcial porque o grupo simplificou o fluxo de troca de senha. O usuário aperta a tecla C durante o desafio ou a digitação da senha, digita a senha antiga e depois a senha nova, e a tecla sustenido confirma. O fluxo dispensa a janela de 60 s após a autenticação e a repetição da senha nova, e o modo por jumper interno não entrou no firmware. Uma senha antiga errada conta como tentativa inválida, o que impede o uso da troca para contornar o bloqueio. O RF-11 está parcial porque o firmware já mede a bateria e avisa abaixo de 7 V, mas o divisor resistivo ainda não faz parte da montagem. O RF-10 depende da montagem no case e o RF-17 depende de um sensor de porta que o grupo ainda não comprou. O firmware já trata o sensor e só precisa que alguém ative a constante correspondente.
 
 \begin{table}[H]\centering\small
 \caption{Requisitos não funcionais e estado atual.}\label{tab:rnf}
@@ -143,9 +143,9 @@ O software segue a divisão que a monografia propõe entre fluxo de dados e unid
 \draw[->] (s4) to[bend right=30] node[right]{erro} (s3);
 \draw[->] (s4) -- node[above]{certa} (s5);
 \draw[->] (s4) -- node[right]{5º erro} (s6);
-\draw[->] (s5) -- node[above]{5 s} (s7);
+\draw[->] (s5) -- node[below, pos=0.6]{3 s} (s7);
 \draw[->] (s7) -- node[left]{trancou} (s0);
-\draw[->] (s5) -- node[right]{tecla A} (s8);
+\draw[->] (s2.south west) to[out=-130, in=130] node[left, pos=0.3]{tecla C} (s8.north west);
 \draw[->] (s8) -| node[pos=0.25, below]{fim} (s0);
 \draw[->] (s6.south) -- ++(0,-0.8) -| node[pos=0.25, below]{fim do bloqueio} ([xshift=-4mm]s0.south);
 \end{tikzpicture}
@@ -221,7 +221,7 @@ Constante & Valor & Significado \\
 \midrule
 T\_DEB & 50 ms & Janela de debounce \\
 T\_INAT & 15 s & Inatividade que descarta a entrada e leva ao sono \\
-T\_ACIO & 5 s & Tempo com a fechadura destravada \\
+T\_ACIO & 3 s & Tempo com a fechadura destravada \\
 N\_TENT & 5 & Senhas erradas seguidas até o bloqueio \\
 T\_LOCK e T\_MAX & 60 s e 30 min & Bloqueio inicial e teto do bloqueio progressivo \\
 W\_REC & 15 min & Janela em que um novo bloqueio conta como consecutivo \\
@@ -284,14 +284,14 @@ O PlatformIO Core 6.2 gerencia a compilação, a gravação e o monitor serial, 
 
 \section{Interface com o usuário}
 
-O usuário interage com o cofre pelo teclado e recebe retorno por som, luz e, quando o módulo chegar, pelo display. Os dígitos de 0 a 9 servem ao desafio e à senha, a tecla asterisco limpa o que o usuário digitou, a tecla sustenido confirma, a tecla A inicia a troca de senha durante a abertura e o par asterisco e sustenido, segurado por 3 s, alterna o modo stealth. A figura \ref{fig:fluxo} resume o uso normal.
+O usuário interage com o cofre pelo teclado e recebe retorno por som, luz e, quando o módulo chegar, pelo display. Os dígitos de 0 a 9 servem ao desafio e à senha, a tecla asterisco limpa o que o usuário digitou, a tecla sustenido confirma, a tecla C inicia a troca de senha e o par asterisco e sustenido, segurado por 3 s, alterna o modo stealth. A figura \ref{fig:fluxo} resume o uso normal.
 
 \begin{figure}[H]\centering
 \includegraphics[width=0.95\linewidth]{figuras/fluxo.pdf}
 \caption{Uso normal do cofre.}\label{fig:fluxo}
 \end{figure}
 
-Como o display ainda não chegou, o cofre mostra o desafio por piscadas do LED acompanhadas de bipes. Cada dígito vira um grupo de piscadas curtas, e o zero vira uma piscada longa, conforme a figura \ref{fig:piscadas}. Quando o display estiver ligado, o desafio aparece no centro do display, e as telas da figura \ref{fig:telas} indicam a senha em digitação, a abertura, o bloqueio e a bateria fraca.
+Como o display ainda não chegou, o cofre mostra o desafio por piscadas silenciosas do LED. Cada dígito vira um grupo de piscadas curtas, e o zero vira uma piscada longa, conforme a figura \ref{fig:piscadas}. Quando o display estiver ligado, o desafio aparece no centro do display, e as telas da figura \ref{fig:telas} indicam a senha em digitação, a abertura, o bloqueio e a bateria fraca.
 
 \begin{figure}[H]\centering
 \includegraphics[width=0.95\linewidth]{figuras/piscadas.pdf}
@@ -303,11 +303,11 @@ Como o display ainda não chegou, o cofre mostra o desafio por piscadas do LED a
 \caption{Telas previstas para o display de seis dígitos.}\label{fig:telas}
 \end{figure}
 
-O buzzer ativo tem um único tom, então o firmware diferencia os eventos pelo número e pela duração dos bipes. Uma tecla aceita gera um bipe curto, um erro gera dois bipes curtos, o acesso gera três bipes de duração crescente, o bloqueio gera um bipe longo e a bateria fraca gera cinco bipes rápidos. No modo stealth o buzzer fica mudo e o LED continua piscando.
+O buzzer ativo tem um único tom, então o firmware diferencia os eventos pelo número e pela duração dos bipes. O buzzer só soa quando o usuário acorda o cofre ou digita, quando a fechadura abre, quando ela tranca e quando o cofre bloqueia. O despertar pelo teclado gera um bipe único, uma tecla aceita gera um bipe curto, um erro de digitação gera dois bipes curtos, o acesso gera três bipes rápidos, o fechamento da tranca gera um bipe e o bloqueio gera um bipe longo. O desafio e o aviso de bateria fraca aparecem só no LED, para que o cofre não faça barulho sem que ninguém tenha mexido nele. No modo stealth o buzzer fica mudo e o LED continua piscando.
 
 \section{Protótipo}
 
-O protótipo atual roda na bancada com a placa ESP32 DevKit V1 ligada ao computador pelo USB, o teclado conectado aos pinos D32 a D13 e um LED com resistor no lugar da fechadura, no pino RX2. Esse arranjo permitiu testar todo o fluxo sem a bateria. Nessa montagem o grupo verificou o desafio, a senha correta acendendo o LED por 5 s, a senha errada, o bloqueio, o sono e o despertar. A fechadura real funciona com a bateria de 9 V, e o grupo testou o acionamento dela diretamente na bateria. A montagem com o MOSFET, a instalação no case e o display seguem pendentes.
+O protótipo atual roda na bancada com a placa ESP32 DevKit V1 ligada ao computador pelo USB, o teclado conectado aos pinos D32 a D13 e um LED com resistor no lugar da fechadura, no pino RX2. Esse arranjo permitiu testar todo o fluxo sem a bateria. Nessa montagem o grupo verificou o desafio, a senha correta acendendo o LED durante a abertura, a senha errada, o bloqueio, o sono e o despertar. A fechadura real funciona com a bateria de 9 V, e o grupo testou o acionamento dela diretamente na bateria. A montagem com o MOSFET, a instalação no case e o display seguem pendentes.
 
 \foto{fotos/prototipo_bancada.jpg}{Protótipo em bancada com a placa, o teclado e o LED no lugar da fechadura.}{fig:foto1}
 \foto{fotos/fechadura_9v.jpg}{Teste da fechadura com a bateria de 9 V.}{fig:foto2}
@@ -324,7 +324,7 @@ O terceiro problema apareceu no primeiro teste com o teclado. O cofre recusava o
 
 O quarto problema veio da sequência de pinos do teclado. O grupo queria os oito fios em pinos vizinhos e sem resistores, e a única sequência que atendia ao despertar pelo teclado incluía o pino D12. Como o D12 escolhe a tensão da flash no reset, o firmware precisava manter esse pino em nível baixo durante o sono, e quatro teclas deixavam de acordar o cofre. Para resolver, o grupo gravou o eFuse que fixa a tensão da flash em 3,3 V. Antes de gravar, o grupo conferiu a operação na documentação do esptool, nos datasheets do ESP32 e do módulo WROOM-32 e no guia da ESP-IDF, leu o estado atual dos eFuses da placa, confirmou que a flash da placa já operava em 3,3 V e simulou o comando em um chip virtual para ver exatamente quais bits mudariam. Depois de gravar, o grupo comparou o resultado com a simulação e testou cinco ciclos seguidos de sono e despertar com o D12 em nível alto, todos sem falha.
 
-O quinto problema foi o mais trabalhoso. Durante um teste, o firmware acusou uma falha na verificação de uma gravação na memória. O grupo escreveu testes que gravam dados aleatórios diretamente na flash e conferem a leitura, e as primeiras rodadas mostraram taxas de erro crescentes, chegando a corromper a maior parte das gravações. Uma varredura setor por setor mostrou que o erro dependia do tempo de uso contínuo e não da região da memória. Depois de trocar a porta USB e repetir o teste nas condições reais do cofre, com a CPU a 80 MHz e pausas entre as gravações, nenhuma gravação falhou. O grupo concluiu que a porta USB antiga fornecia energia instável sob carga contínua e acrescentou ao firmware a repetição automática da gravação, como proteção extra.
+O quinto problema foi o mais trabalhoso. Durante um teste, o firmware acusou uma falha na verificação de uma gravação na memória. O grupo escreveu testes que gravam dados aleatórios diretamente na flash e conferem a leitura, e as primeiras rodadas mostraram taxas de erro crescentes, chegando a corromper a maior parte das gravações. Uma varredura setor por setor mostrou que o erro dependia do tempo de uso contínuo e não da região da memória. Depois de trocar a porta USB e repetir o teste nas condições reais do cofre, com a CPU a 80 MHz e pausas entre as gravações, nenhuma gravação falhou. O grupo concluiu que a porta USB antiga fornecia energia instável sob carga contínua e acrescentou ao firmware a repetição automática da gravação, como proteção extra. Dias depois, o erro voltou logo após o acesso concedido. Um novo teste mostrou que a própria varredura tinha gravado dados aleatórios na partição NVS e deixado a partição sem espaço útil. Depois que o grupo apagou a partição, as gravações voltaram a funcionar, e o teste com o buzzer e a saída da tranca ligados durante a gravação mostrou uma única falha em 300 tentativas. Para eliminar esse resto de risco, o firmware agora grava a memória antes de acionar a fechadura e silencia o buzzer durante cada gravação.
 
 Por fim, o ambiente de desenvolvimento também exigiu ajustes. O WSL2 não enxerga dispositivos USB sem o usbipd-win, o kernel do WSL não carregava o driver do conversor CP2102 automaticamente e a porta serial aparecia sem permissão de acesso a cada reconexão. O grupo documentou os comandos de cada etapa no guia de montagem. Uma atualização recente de uma biblioteca Python também quebrou a ferramenta de eFuses, e o grupo fixou a versão anterior da biblioteca.
 
